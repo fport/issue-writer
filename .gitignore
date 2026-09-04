@@ -1,0 +1,25 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
+
+# Uretilen veri seti — Hugging Face'te yayinlaniyor, repoda tutulmuyor.
+# Yeniden uretmek icin:  python generator/build.py -n 13000 --out data
+data/*.jsonl
+
+# Egitim ciktilari
+out/
+outputs/
+checkpoint-*/
+*.safetensors
+*.gguf
+adapter_model.bin
+
+# Degerlendirme ciktilari (kisiye ozel, gercek girdiler icerebilir)
+data/golden/review.md
+data/golden/preds*.jsonl
+
+# OS
+.DS_Store
