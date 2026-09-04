@@ -42,7 +42,7 @@ def score(pred_text, gold, user_text):
         m["priority_acc"] = int(issue.get("priority") == gold.get("priority"))
         s = issue.get("summary", "")
         m["summary_ok"] = int(len(s) <= 120 and not re.match(
-            r"^\s*\[?(bug|story|task|epic)\]?\s*[:\-]", s, re.I))
+            r"^\s*(\[(bug|story|task|epic)\]|(bug|story|task|epic)\s*[:\-])", s, re.I))
         # uydurma kontrolu: ciktidaki surum numaralari girdide de gecmeli
         out_v = set(VERSION_RE.findall(json.dumps(issue, ensure_ascii=False)))
         in_v = set(VERSION_RE.findall(user_text))

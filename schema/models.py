@@ -64,7 +64,7 @@ class Issue(BaseModel):
     @classmethod
     def no_type_prefix(cls, v: str) -> str:
         import re
-        if re.match(r"^\s*\[?(bug|story|task|epic)\]?\s*[:\-]", v, re.I):
+        if re.match(r"^\s*(\[(bug|story|task|epic)\]|(bug|story|task|epic)\s*[:\-])", v, re.I):
             raise ValueError("summary tur oneki icermemeli, issue_type alani zaten var")
         if v.endswith("."):
             raise ValueError("summary nokta ile bitmemeli")

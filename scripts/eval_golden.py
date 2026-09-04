@@ -47,7 +47,7 @@ def rule_check(pred_text, source_text):
                         and p.get("priority") in ENUM_PRIO)
     s = p.get("summary", "")
     m["summary_ok"] = int(0 < len(s) <= 120 and not re.match(
-        r"^\s*\[?(bug|story|task|epic)\]?\s*[:\-]", s, re.I))
+        r"^\s*(\[(bug|story|task|epic)\]|(bug|story|task|epic)\s*[:\-])", s, re.I))
     d = p.get("description", "")
     m["sections_ok"] = int(len(re.findall(r"^h2\. ", d, re.M)) >= 3)
     acs = p.get("acceptance_criteria") or []

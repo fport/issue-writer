@@ -75,7 +75,7 @@ def check_row(row, idx, errors, warns):
     if s:
         if len(s) > 120:
             errors.append(f"[{idx}] summary 120 karakteri asiyor ({len(s)})")
-        if re.match(r"^\s*(\[?(bug|story|task|epic)\]?\s*[:\-])", s, re.I):
+        if re.match(r"^\s*(\[(bug|story|task|epic)\]|(bug|story|task|epic)\s*[:\-])", s, re.I):
             errors.append(f"[{idx}] summary tur oneki iceriyor: {s[:40]}")
         if s.endswith("."):
             warns.append(f"[{idx}] summary nokta ile bitiyor")
