@@ -34,6 +34,9 @@ single valid JSON object conforming to `schema/issue.schema.json`.
 
 Balanced across two languages: **50% English, 50% Turkish.**
 
+Generator, validators, evaluation tooling and the fine-tuning notebook live in
+[github.com/fport/jira-issue-writer](https://github.com/fport/jira-issue-writer).
+
 ## Why this dataset exists
 
 General-purpose models make three recurring mistakes when writing Jira issues:
