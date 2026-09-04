@@ -115,10 +115,11 @@ surfaces its rationale in fields like `rationale` and `drivers`.
 ## Coverage
 
 - **10 domains:** fintech, e-commerce, B2B SaaS, telehealth, logistics, edtech,
-  internal developer platform, mobile gaming, video streaming, and **licensed
-  sports betting / casino**. The betting domain contributes three themes the other
-  domains do not cover: third-party **provider integration**, hard **real-time odds
-  and latency** constraints, and **regulatory / responsible-gaming** obligations.
+  internal developer platform, mobile gaming, video streaming, and regulated
+  consumer platforms. Domains were chosen to cover distinct engineering themes
+  rather than distinct markets: third-party provider integration, hard real-time
+  and latency constraints, regulatory and compliance obligations, offline-first
+  mobile behaviour, and multi-tenant permissioning.
 - **10 input channels:** Slack, e-mail, meeting notes, support ticket, one-liner
   request, PRD excerpt, QA note, Sentry alert, voice-note transcript, WhatsApp.
 - **6 issue types:** Epic, Story, Task, Bug, Spike, Sub-task — each represented in
@@ -136,7 +137,7 @@ surfaces its rationale in fields like `rationale` and `drivers`.
     {"role": "assistant", "content": "{ \"issue_type\": \"Story\", \"summary\": ... }"}
   ],
   "meta": {"task": "draft_issue", "kind": "feature", "lang": "en",
-           "domain": "betting", "slug": "cashout", "completeness": "partial",
+           "domain": "ecommerce", "slug": "guest-checkout", "completeness": "partial",
            "split": "train", "hash": "9f2c1a4b7e03"}
 }
 ```
