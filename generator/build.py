@@ -11,6 +11,7 @@ from banks import DOMAINS
 from banks.tech import TASKS, SPIKES
 import copy
 import tasks as T
+import reasoning as RSN
 
 # gorev agirliklari: draft_issue ana gorev, digerleri destekleyici
 WEIGHTS = {
@@ -101,7 +102,27 @@ def make_example(kind, item, domain, lang, task, rng):
     return None
 
 
-def build(target, seed, holdout_ratio=0.10):
+def add_thinking(ex, rng):
+    """Assistant ciktisinin basina dusunme zinciri ekler.
+
+    Blok model-agnostiktir: <think> ... </think>. Gemma 4 thinking icin egitim
+    aninda <|channel>thought ... <channel|> bicimine eslenir.
+    """
+    m = ex["meta"]
+    try:
+        payload = json.loads(ex["messages"][2]["content"])
+    except json.JSONDecodeError:
+        return ex
+    think = RSN.build(m["task"], payload, m["lang"], rng, m.get("kind"))
+    if not think:
+        return ex
+    ex["messages"][2]["content"] = (
+        f"<think>\n{think}\n</think>\n\n" + ex["messages"][2]["content"])
+    ex["meta"]["variant"] = "thinking"
+    return ex
+
+
+def build(target, seed, holdout_ratio=0.10, thinking=False):
     rng = random.Random(seed)
     items = all_items()
     rng.shuffle(items)
@@ -147,6 +168,8 @@ def build(target, seed, holdout_ratio=0.10):
             continue
         seen.add(key)
         per_task[task] += 1
+        if thinking:
+            ex = add_thinking(ex, rng)
         ex["meta"]["split"] = "holdout" if item.slug in holdout else "train"
         ex["meta"]["hash"] = key[:12]
         rows.append(ex)
@@ -177,9 +200,11 @@ def main():
     ap.add_argument("-n", "--target", type=int, default=12000)
     ap.add_argument("--seed", type=int, default=20260904)
     ap.add_argument("--out", default="data")
+    ap.add_argument("--thinking", action="store_true",
+                    help="assistant ciktisina <think> blogu ekle (ayni ornekler, gorunur muhakeme)")
     args = ap.parse_args()
 
-    rows = build(args.target, args.seed)
+    rows = build(args.target, args.seed, thinking=args.thinking)
     rng = random.Random(args.seed + 1)
     train, val, test = split_rows(rows, rng)
     os.makedirs(args.out, exist_ok=True)

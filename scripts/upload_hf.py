@@ -18,7 +18,10 @@ def sanity(path):
         for line in fh:
             row = json.loads(line)
             assert len(row["messages"]) == 3, "mesaj sayisi 3 olmali"
-            json.loads(row["messages"][2]["content"])   # assistant gecerli JSON mu
+            c = row["messages"][2]["content"]
+            if c.lstrip().startswith("<think>"):
+                c = c[c.find("</think>") + 8:].strip()
+            json.loads(c)                              # assistant gecerli JSON mu
             n += 1
     return n
 
@@ -50,6 +53,19 @@ def main():
                         path_in_repo=f"data/{split}.jsonl",
                         repo_id=a.repo, repo_type="dataset")
         print(f"yuklendi: data/{split}.jsonl")
+
+    # thinking varyanti (varsa)
+    tdir = os.path.join(a.dir, "thinking")
+    if os.path.isdir(tdir):
+        for split in ("train", "validation", "test"):
+            p = os.path.join(tdir, f"{split}.jsonl")
+            if not os.path.exists(p):
+                continue
+            sanity(p)
+            api.upload_file(path_or_fileobj=p,
+                            path_in_repo=f"data/thinking/{split}.jsonl",
+                            repo_id=a.repo, repo_type="dataset")
+            print(f"yuklendi: data/thinking/{split}.jsonl")
 
     if os.path.exists(a.card):
         api.upload_file(path_or_fileobj=a.card, path_in_repo="README.md",

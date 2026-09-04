@@ -1,135 +1,181 @@
-# Jira Issue Writer — veri seti üretimi ve fine-tune hattı
+# Issue Writer — synthetic dataset generator and fine-tuning pipeline
 
-[![Dataset on HF](https://img.shields.io/badge/%F0%9F%A4%97%20dataset-jira--issue--writer--tr--en-yellow)](https://huggingface.co/datasets/fport/jira-issue-writer-tr-en)
+[![Dataset on HF](https://img.shields.io/badge/%F0%9F%A4%97%20dataset-issue--writer--tr--en-yellow)](https://huggingface.co/datasets/fport/issue-writer-tr-en)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 
-Ham ürün girdisini (Slack mesajı, destek talebi, Sentry alarmı, toplantı notu)
-**kurallara uygun Jira kayıtlarına** çeviren bir model eğitmek için gereken her şey:
-araştırılmış standartlar, sentetik veri üreteci, kalite denetimi, HuggingFace
-yükleme ve QLoRA eğitim hattı.
+Everything needed to train a model that turns raw product input — a Slack message,
+a support ticket, a Sentry alert, a meeting note — into **well-formed issue tracker
+entries**: researched standards, a synthetic data generator, quality gates, Hub
+publishing and a QLoRA training pipeline.
 
-Türkçe ve İngilizce dengeli (%50/%50). Çıktı her zaman tek bir geçerli JSON nesnesi.
+Bilingual and balanced: 50% English, 50% Turkish. Output is always a single valid
+JSON object.
 
-## Hızlı başlangıç
+*(Türkçe sürüm: [README.tr.md](README.tr.md))*
+
+## Quick start
 
 ```bash
-python generator/build.py -n 13000 --out data     # veri setini üret
-python scripts/validate.py --dir data             # denetle (0 hata beklenir)
-python scripts/upload_hf.py --repo kullanici/jira-issue-writer
-python scripts/train_qlora.py --data data --out out/jira-writer
-python scripts/eval_model.py --model out/jira-writer --base Qwen/Qwen2.5-7B-Instruct
+python generator/build.py -n 13000 --out data              # generate
+python generator/build.py -n 13000 --thinking --out data/thinking
+python scripts/validate.py --dir data                      # gate (expects 0 errors)
+python scripts/upload_hf.py --repo <user>/issue-writer-tr-en
 ```
 
-Üretim tohumludur; aynı `--seed` aynı veri setini verir.
+Generation is seeded (`--seed`, default 20260904); the same seed reproduces the
+same dataset byte for byte.
 
-## Depo yapısı
+## Layout
 
 ```
 research/
-  JIRA_STANDARDS.md      veri setinin anayasası — her kural bir kaynağa dayanır
-  SOURCES.md             araştırma kaynakları
+  JIRA_STANDARDS.md      the contract the generator implements, with sources
+  SOURCES.md             research references
 generator/
-  banks/                 içerik havuzu: 10 alan, 67 özellik, 52 hata, 16 epic
-  banks/tech.py          13 teknik görev (Task) ve 6 araştırma (Spike) çekirdeği
-  ac_patterns.py         14 desene göre Given/When/Then kabul kriteri üreteci
-  fields.py              summary, priority, bağlam, etki, kanıt havuzları
-  inputs.py              10 girdi kanalı + eksiklik seviyeleri
-  render.py              Jira wiki markdown gövde üreticileri
-  tasks.py               10 görev tipinin örnek üreticileri
-  build.py               üretim, tekilleştirme, sızıntısız bölme
-schema/issue.schema.json çıktı sözleşmesi
+  banks/                 content pool: 10 domains, 67 features, 52 bugs, 16 epics
+  banks/tech.py          13 technical tasks and 6 spikes, domain-agnostic
+  ac_patterns.py         acceptance criteria engine (14 patterns + cross pool)
+  fields.py              summary, priority, context, impact, evidence pools
+  inputs.py              10 input channels and three completeness levels
+  render.py              issue body renderers (wiki markdown)
+  tasks.py               the ten task generators
+  reasoning.py           thinking-variant chain of thought
+  build.py               generation, dedup, leakage-free splitting
+schema/issue.schema.json output contract
 scripts/
-  validate.py            kalite denetimi (JSON, enum, AC sayısı, sızıntı, TR yazım)
-  md_to_adf.py           markdown → ADF + Jira create-issue gövdesi
-  upload_hf.py           HuggingFace Hub'a yükleme
-  train_qlora.py         QLoRA fine-tune (Qwen2.5-7B varsayılan)
-  merge_lora.py          adapter birleştirme / Hub'a model yükleme
-  eval_model.py          sentetik test setinde ölçüm (JSON, tip/priority, uydurma)
-  eval_golden.py         gerçek girdilerde ölçüm + kör insan incelemesi
-  eval_judge.py          LLM-as-judge, rubrik bazlı kalite puanlaması
-  tr_fix.py              ASCII Türkçe → diakritikli Türkçe motoru
-  tr_tools/              yeni içerik eklerken kullanılan Türkçe düzeltme araçları
+  validate.py            quality gate (JSON, enums, AC count, leakage, Turkish)
+  md_to_adf.py           markdown to Atlassian Document Format + create payload
+  upload_hf.py           publish to the Hugging Face Hub
+  train_qlora.py         QLoRA fine-tune (TRL, for a machine with a GPU)
+  merge_lora.py          merge adapter / push model
+  eval_model.py          synthetic test split metrics
+  eval_golden.py         real-input metrics + blind human review
+  eval_judge.py          LLM-as-judge, rubric based
+  tr_fix.py              Turkish diacritic restoration engine
+  tr_tools/              helpers for adding new content banks
 notebooks/
   gemma4_unsloth_finetune.ipynb
-                         Colab'da uçtan uca eğitim: Gemma 4 E4B + Unsloth + QLoRA
 data/
-  train|validation|test.jsonl
-  golden/                gerçek girdilerden altın set (sen doldurursun)
-DATASET_CARD.md          HuggingFace dataset card
-SAMPLES.md               veri setinden yedi örnek kayıt
+  train|validation|test.jsonl        default variant
+  thinking/                          same examples with visible reasoning
+  golden/                            your own real inputs
 ```
 
-## Veri seti
+## Dataset
 
-13.000 örnek · 10.948 train / 1.026 validation / 1.026 test · 10 görev · 9 alan ·
-2 dil. Ayrıntılı tablo ve şema için [DATASET_CARD.md](DATASET_CARD.md).
+13,000 examples · 10,937 train / 1,031 validation / 1,032 test · 10 tasks ·
+10 domains · 2 languages. Full breakdown in [DATASET_CARD.md](DATASET_CARD.md).
 
-Üç tasarım kararı veri setinin karakterini belirler:
+Three design decisions shape it:
 
-**1. Uydurma yerine varsayım.** Her çıktıda `assumptions` ve `clarifying_questions`
-alanları vardır. Girdi eksikse (`partial`, `vague` seviyeleri) model boşluğu
-doldurmak yerine adıyla yazmayı öğrenir.
+**1. Assumptions instead of invention.** Every output carries `assumptions` and
+`clarifying_questions`. When the input is degraded (`partial`, `vague`), the model
+learns to name the gap rather than fill it with something plausible.
 
-**2. Reddedilen alternatif.** `classify_type` görevi yalnızca doğru tipi değil,
-elenen tipi ve eleme gerekçesini de öğretir — "var olmayan bir özellik talebi Bug
-değildir", "teknik borç Story değildir".
+**2. The rejected alternative.** `classify_type` teaches not only the correct type
+but the one that was ruled out and why — "a request for a capability that does not
+exist is not a Bug", "tech debt is not a Story".
 
-**3. Sızıntısız bölme.** Bölme satır bazlı rastgele değildir; çekirdek içeriklerin
-%12'si tamamen ayrılır. Test setindeki hiçbir özellik/hata eğitimde görülmez.
+**3. Leakage-free splitting.** Splits are not random rows. 10% of content cores are
+held out entirely, slug-based (task and spike cores are cloned across domains) and
+stratified by core type (otherwise the test split runs out of bug- and epic-based
+examples).
 
-## Türkçe hakkında
+### Thinking variant
 
-Türkçe metinler tam diakritikli üretilir. `scripts/tr_fix.py` ünlü uyumu, ünsüz
-yumuşaması ve `-abil-`/`-ken` gibi uyuma girmeyen ekleri kural bazlı işleyen bir
-motordur (957 kök). `scripts/validate.py` her çalıştırmada diakritiksiz kalıntı
-tarar — mevcut sürümde sıfır.
+`data/thinking/` contains the same examples with the reasoning made visible:
 
-## Değerlendirme
+```
+<think>
+Type first: the outcome is visible to the customer and nothing is broken — this is
+new user-facing value. So this is a Story.
+Severity and priority are different questions. ...
+</think>
 
-Dört katman var; her biri farklı bir soruyu cevaplıyor ve hiçbiri tek başına yeterli değil.
+{ "issue_type": "Story", ... }
+```
 
-| Katman | Araç | Cevapladığı soru | Maliyet |
+The reasoning is not invented for the variant — it is derived from what the data
+already encodes: the type decision rule, the severity/priority split, acceptance
+criteria categories, estimation drivers, and detected gaps.
+
+The `<think>` block is model-agnostic. For Gemma 4's thinking mode, map it to
+`<|channel>thought … <channel|>` at training time, the same way a chat template is
+applied. Train it as a **separate adapter**: a single adapter cannot serve both
+modes, because the template it learned differs.
+
+Whether thinking is worth it here is an open question — this task is schema filling
+rather than open-ended reasoning, and the default variant already exposes its
+rationale in fields like `rationale` and `drivers`. Measure both on the golden set
+before committing to the extra tokens.
+
+## Evaluation
+
+Four layers. Each answers a different question; none is sufficient alone.
+
+| Layer | Tool | Question | Cost |
 |---|---|---|---|
-| 1. Veri denetimi | `scripts/validate.py` | Veri setinin kendisi kurallara uyuyor mu? Sızıntı var mı? | saniyeler |
-| 2. Sentetik test | `scripts/eval_model.py`, notebook Adım 11 | Model **üreticinin kalıbını** öğrendi mi? | dakikalar |
-| 3. Altın set | `scripts/eval_golden.py` | **Gerçek** bir girdide işe yarıyor mu? | GPU + insan |
-| 4. LLM-as-judge | `scripts/eval_judge.py` | Kural yazılamayan kalite boyutları nasıl? | API ücreti |
+| 1. Data gate | `validate.py` | Does the dataset itself obey the rules? Any leakage? | seconds |
+| 2. Synthetic test | `eval_model.py` | Did the model learn **the generator's pattern**? | minutes |
+| 3. Golden set | `eval_golden.py` | Does it work on a **real** input? | GPU + human |
+| 4. LLM-as-judge | `eval_judge.py` | How are the qualities no rule can capture? | API cost |
 
-**Katman 2'nin kör noktası önemli:** `data/test.jsonl` bizim üreticimizden çıkar.
-Model orada %95 alırsa bu, üreticinin kalıbını öğrendiğini kanıtlar — gerçek hayatta
-iyi Jira kaydı yazdığını değil. Bu yüzden katman 3 var.
+**Layer 2 has a blind spot that matters.** `data/test.jsonl` comes from our own
+generator. Scoring 95% there proves the model learned the generator's pattern — not
+that it writes good issues. That is why layer 3 exists.
 
-**Katman 3** ekibin gerçekten yazdığı girdilerle çalışır (`data/golden/`). İki çıktı
-üretir: kural denetimi (JSON geçerliliği, şema, uydurulmuş sürüm numarası, eksik
-bilgide soru sorma) ve **kör insan incelemesi** — model adları gizli, sıra karışık.
-`--compare` ile eğitilmemiş temel modelle yan yana koyar; kendi modelini kayırmanın
-önüne geçen tek yöntem budur.
+**Layer 3** runs on inputs your team actually wrote (`data/golden/`). It produces a
+rule check (JSON validity, schema, invented version numbers, whether it asks when
+unsure) and a **blind review file** — model names hidden, order shuffled. With
+`--compare` it puts the base model next to the fine-tuned one. That is the only
+reliable way to stop yourself from favouring your own model.
 
-**Katman 4** rubrik bazlı puanlama yapar: issue tipi uygunluğu, kabul kriterlerinin
-test edilebilirliği, girdiye sadakat (uydurma), başlık kalitesi, sprint'e hazırlık.
-Her boyut için yargıçtan **kanıt** istenir, "kaliteli mi" diye sorulmaz. Yargıç modelin
-kendi üslubunu kayırma eğilimi vardır, bu yüzden insan incelemesinin yerine değil ön
-elemesi olarak kullanılır; 0,3 puandan küçük farklar anlamlı sayılmaz.
+**Layer 4** scores five dimensions with evidence required for each: type fit,
+criteria testability, faithfulness to the input, summary quality, readiness to pull.
+Judge models favour their own style, so it is a pre-filter for human review, not a
+replacement; differences under 0.3 points are not meaningful.
 
-### Kaç örnek gerekir
+### How many examples do you need
 
-Bir oranı ölçerken güven aralığı kabaca `1.96 × √(p(1-p)/n)`:
+Confidence interval for a proportion is roughly `1.96 × √(p(1-p)/n)`:
 
-| n | ±hata payı (p≈0,9) | ne için yeter |
+| n | ±margin (p≈0.9) | good for |
 |---|---|---|
-| 5 | ±%26 | gözle kontrol |
-| 30 | ±%11 | kaba fikir |
-| 100 | ±%6 | karar verilebilir |
-| 250 | ±%4 | sürümler arası fark |
+| 5 | ±26% | eyeballing |
+| 30 | ±11% | rough sense |
+| 100 | ±6% | making a decision |
+| 250 | ±4% | comparing two runs |
 
-Beş örnekle "%80 mi %100 mü" ayırt edilemez. Karar verilecekse 100'ün altına inilmez.
+Five examples cannot separate 80% from 100%. Do not go below 100 for a decision.
 
+## Training
 
-## Yeni alan eklemek
+The recommended path is
+[`notebooks/gemma4_unsloth_finetune.ipynb`](notebooks/gemma4_unsloth_finetune.ipynb):
+Gemma 4 E4B with Unsloth and QLoRA, about two hours on a Colab Pro L4.
 
-`generator/banks/` altına yeni bir modül açıp `domain(...)` ve `register(...)`
-çağırmanız yeterli; `banks/__init__.py` içine import edin. Üretici yeni alanı
-otomatik olarak tüm görevlerde kullanır.
+The notebook is careful in three places, because the failure modes here are silent
+rather than loud:
+
+1. **It trains for full epochs**, not a fixed step count. On this dataset 60 steps
+   shows the model one percent of the examples — a smoke test, not training.
+2. **It verifies the response mask.** If the turn markers passed to
+   `train_on_responses_only` do not match the model's template, the mask quietly
+   covers nothing and you train against the wrong target for hours. The notebook
+   prints the tokens that reach the loss before training starts.
+3. **It strips the leading `<bos>`.** The chat template emits one and `SFTTrainer`
+   adds another during tokenisation; the result is asserted.
+
+`scripts/train_qlora.py` is the alternative for a machine with its own GPU (Qwen2.5
+via TRL). Note that TRL's `assistant_only_loss=True` requires a `{% generation %}`
+block in the chat template — where it is missing, loss is silently computed over the
+whole sequence. The script uses prompt-completion format instead, which works on any
+model.
+
+## Adding a domain
+
+Add a module under `generator/banks/`, call `domain(...)` and `register(...)`, then
+import it in `banks/__init__.py`. The generator picks it up across every task.
 
 ```python
 d = domain("insurance", "insurance platform", "sigorta platformu", "INS",
@@ -137,26 +183,12 @@ d = domain("insurance", "insurance platform", "sigorta platformu", "INS",
 register(d, features=[F("claim-upload", "upload", "Claims", ["claims"], ...)], ...)
 ```
 
-## Eğitim
+Turkish text can be written in ASCII and corrected with `scripts/tr_tools/`; the
+validator scans for ASCII-folded residue on every run.
 
-Önerilen yol [`notebooks/gemma4_unsloth_finetune.ipynb`](notebooks/gemma4_unsloth_finetune.ipynb):
-Gemma 4 E4B + Unsloth + QLoRA, Colab Pro'da L4'te ~2 saat.
+## From output to the tracker
 
-Notebook üç noktada dikkatli:
-
-1. **Tam epoch eğitir**, `max_steps` ile demo yapmaz. Bu veri setinde 60 adım,
-   örneklerin %1'ini görmek demektir.
-2. **Maskeyi doğrular.** `train_on_responses_only` için verilen tur işaretleri modelin
-   şablonuyla eşleşmezse maske sessizce boşa düşer; notebook eğitimden önce loss'a
-   giren tokenları yazdırır.
-3. **Test setinde ölçer.** JSON geçerliliği, tip/priority doğruluğu, AC sayısı ve
-   uydurma kontrolü — TR/EN kırılımıyla.
-
-Alternatif olarak `scripts/train_qlora.py` (Qwen2.5 + TRL, GPU'lu makine için).
-
-## Üretimden Jira'ya
-
-Model markdown `description` üretir. Jira Cloud v3 API'si ADF beklediği için:
+The model emits markdown in `description`. Jira Cloud v3 expects ADF:
 
 ```python
 from scripts.md_to_adf import to_jira_payload
@@ -166,9 +198,10 @@ payload = to_jira_payload(model_output, project_key="FIN",
 requests.post(f"{base}/rest/api/3/issue", json=payload, auth=(email, api_token))
 ```
 
-Custom field id'lerini `GET /rest/api/3/issue/createmeta?projectKeys=FIN` ile bulun.
+Find custom field ids with `GET /rest/api/3/issue/createmeta?projectKeys=FIN`.
 
-## Lisans
+## License
 
-Apache-2.0. Veri tamamen sentetiktir; kişi adları, şirketler, metrikler ve sürüm
-numaraları kurgudur.
+Apache-2.0. The data is entirely synthetic; names, companies, metrics and version
+numbers are fictional. Jira and Atlassian Document Format are referenced as target
+formats only; this project is not affiliated with or endorsed by Atlassian.

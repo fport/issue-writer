@@ -36,8 +36,21 @@ def check_row(row, idx, errors, warns):
     if len(msgs) != 3 or [x["role"] for x in msgs] != ["system", "user", "assistant"]:
         errors.append(f"[{idx}] mesaj yapisi bozuk")
         return
+    content = msgs[2]["content"]
+    # thinking varyantinda cikti <think>...</think> blogu ile baslar
+    if content.lstrip().startswith("<think>"):
+        end = content.find("</think>")
+        if end == -1:
+            errors.append(f"[{idx}] <think> blogu kapanmamis")
+            return
+        think = content[content.find("<think>") + 7:end].strip()
+        if len(think) < 40:
+            warns.append(f"[{idx}] dusunme zinciri cok kisa ({len(think)} karakter)")
+        if "{" in think and "}" in think:
+            warns.append(f"[{idx}] dusunme zinciri JSON sizdiriyor olabilir")
+        content = content[end + 8:].strip()
     try:
-        obj = json.loads(msgs[2]["content"])
+        obj = json.loads(content)
     except json.JSONDecodeError as e:
         errors.append(f"[{idx}] assistant JSON degil: {e}")
         return

@@ -24,18 +24,26 @@ configs:
         path: data/validation.jsonl
       - split: test
         path: data/test.jsonl
+  - config_name: thinking
+    data_files:
+      - split: train
+        path: data/thinking/train.jsonl
+      - split: validation
+        path: data/thinking/validation.jsonl
+      - split: test
+        path: data/thinking/test.jsonl
 ---
 
-# Jira Issue Writer — bilingual (EN/TR) instruction dataset
+# Issue Writer — bilingual (EN/TR) instruction dataset
 
 Turns raw product input — a Slack message, a support ticket, a Sentry alert, a
-meeting note — into **well-formed Jira issues**. Every assistant response is a
+meeting note — into **well-formed issue tracker entries**. Every assistant response is a
 single valid JSON object conforming to `schema/issue.schema.json`.
 
 Balanced across two languages: **50% English, 50% Turkish.**
 
 Generator, validators, evaluation tooling and the fine-tuning notebook live in
-[github.com/fport/jira-issue-writer](https://github.com/fport/jira-issue-writer).
+[github.com/fport/issue-writer](https://github.com/fport/issue-writer).
 
 ## Why this dataset exists
 
@@ -68,6 +76,41 @@ the rejected alternative alongside the correct answer (hard negatives).
 | `split_epic` — epic → independently shippable children | 545 | 43 | 34 | 622 |
 | `triage_priority` — severity / priority + SLA | 558 | 27 | 35 | 620 |
 | **Total** | **10948** | **1026** | **1026** | **13000** |
+
+## Thinking variant
+
+The `thinking` config carries the same examples with the reasoning made visible:
+
+```python
+from datasets import load_dataset
+default  = load_dataset("fport/issue-writer-tr-en")               # JSON only
+thinking = load_dataset("fport/issue-writer-tr-en", "thinking")   # <think> + JSON
+```
+
+```
+<think>
+Type first: the outcome is visible to the customer and nothing is broken — this is
+new user-facing value. So this is a Story.
+Severity and priority are different questions. Severity is Major — that is the
+technical damage. Priority High comes from the business impact.
+4 acceptance criteria — inside the 3-7 band, so the story does not need splitting.
+</think>
+
+{ "issue_type": "Story", ... }
+```
+
+The reasoning is derived, not invented: it comes from the type decision rule, the
+severity/priority split, acceptance-criteria categories, estimation drivers and the
+detected gaps that the data already encodes. Median block length is ~274 characters.
+
+The `<think>` block is model-agnostic. For Gemma 4's thinking mode, map it to
+`<|channel>thought … <channel|>` at training time. Train it as a **separate
+adapter** — one adapter cannot serve both modes, since the template it learned
+differs.
+
+Whether thinking pays off here is worth measuring rather than assuming: this task is
+schema filling rather than open-ended reasoning, and the default variant already
+surfaces its rationale in fields like `rationale` and `drivers`.
 
 ## Coverage
 
