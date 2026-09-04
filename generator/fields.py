@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Jira alan degerleri: summary, priority, labels, context, DoR/DoD parcalari."""
 
 SUMMARY_F = {

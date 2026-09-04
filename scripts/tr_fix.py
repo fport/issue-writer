@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """ASCII Turkce -> dogru Turkce.
 
 Yontem: en uzun kok eslesmesi + Turkce unlu uyumuyla ek duzeltmesi.
@@ -119,7 +118,7 @@ ROOTS = {
 "kurumsal":"kurumsal","kurus":"kuruş","kurye":"kurye","kutucuk":"kutucuk","kuyruk":"kuyruk",
 "kuyrug":"kuyruğ","kuyruga":"kuyruğa","kvkk":"KVKK",
 # l
-"lider":"lider","limit":"limit","link":"link","lisans":"lisans","liste":"liste","log":"log",
+"lider":"lider","link":"link","lisans":"lisans","liste":"liste","log":"log",
 "logla":"logla","loglan":"loglan",
 # m
 "maas":"maaş","maasli":"maaşlı","mac":"maç","makbuz":"makbuz","maliyet":"maliyet",
@@ -157,7 +156,7 @@ ROOTS = {
 "sahibi":"sahibi","sahip":"sahip","sahte":"sahte","sakla":"sakla","sanal":"sanal",
 "saniye":"saniye","satici":"satıcı","satil":"satıl","satin":"satın","satir":"satır",
 "savas":"savaş","sayfa":"sayfa","sayil":"sayıl","sayi":"sayı","sebep":"sebep","secenek":"seçenek",
-"sec":"seç","secim":"seçim","secici":"seçici","sefer":"sefer","segment":"segment",
+"sec":"seç","secim":"seçim","secici":"seçici","sefer":"sefer",
 "sekilde":"şekilde","sekme":"sekme","selfie":"selfie","senkron":"senkron","senkronize":"senkronize",
 "sepet":"sepet","serbest":"serbest","seri":"seri","sertifika":"sertifika","servis":"servis",
 "ses":"ses","sessizce":"sessizce","sevkiyat":"sevkiyat","sey":"şey","seyahat":"seyahat",
@@ -203,7 +202,7 @@ ROOTS = {
 "yayin":"yayın","yayinla":"yayınla","yaz":"yaz","yazdir":"yazdır","yazil":"yazıl","yazim":"yazım",
 "yazis":"yazış","yeni":"yeni","yeniden":"yeniden","yenile":"yenile","yer":"yer","yerel":"yerel",
 "yerine":"yerine","yetersiz":"yetersiz","yetiskin":"yetişkin","yetki":"yetki",
-"yetkilendir":"yetkilendir","yil":"yıl","yitir":"yitir","yok":"yok","yoksa":"yoksa","yol":"yol",
+"yetkilendir":"yetkilendir","yil":"yıl","yitir":"yitir","yok":"yok","yoksa":"yoksa",
 "yonelik":"yönelik","yonetici":"yönetici","yonetim":"yönetim","yonlendir":"yönlendir",
 "yukle":"yükle","yukleme":"yükleme","yuklen":"yüklen","yuksek":"yüksek","yukselt":"yükselt",
 "yurut":"yürüt","yuz":"yüz","yuzde":"yüzde","yuzlerce":"yüzlerce","yuzunden":"yüzünden",
@@ -214,17 +213,12 @@ ROOTS = {
 }
 
 # ekleri duzeltmeyecegimiz, oldugu gibi birakilacak kelimeler (kisaltma/marka/kod)
-KEEP = set("""API CSV SDK URL REST JSON HTTP HTTPS SSO SCIM SAML SLO SMS OTP PIN PDF POS PAN
-KDV TL EUR USD IBAN MFA PCI DSS SOC WAF DRM HDR SDR TV CI CD GB MB ms mg ml SKU ID IdP OK
-Slack Google Apple Face iPhone iOS Android Excel Kafka Wi Fi ICE ML AI QA UX UI IoT
-OOMKilled PATCH POST GET Type Live Pull SaaS B2B Q1 Q2 Q3 Q4 H1 H2 KVKK GDPR
-asciifolding analyzer stemming tokenizer webhook endpoint payload timeout
-rollback rollout backlog sprint grooming staging""".split())
+KEEP = set(["API", "CSV", "SDK", "URL", "REST", "JSON", "HTTP", "HTTPS", "SSO", "SCIM", "SAML", "SLO", "SMS", "OTP", "PIN", "PDF", "POS", "PAN", "KDV", "TL", "EUR", "USD", "IBAN", "MFA", "PCI", "DSS", "SOC", "WAF", "DRM", "HDR", "SDR", "TV", "CI", "CD", "GB", "MB", "ms", "mg", "ml", "SKU", "ID", "IdP", "OK", "Slack", "Google", "Apple", "Face", "iPhone", "iOS", "Android", "Excel", "Kafka", "Wi", "Fi", "ICE", "ML", "AI", "QA", "UX", "UI", "IoT", "OOMKilled", "PATCH", "POST", "GET", "Type", "Live", "Pull", "SaaS", "B2B", "Q1", "Q2", "Q3", "Q4", "H1", "H2", "KVKK", "GDPR", "asciifolding", "analyzer", "stemming", "tokenizer", "webhook", "endpoint", "payload", "timeout", "rollback", "rollout", "backlog", "sprint", "grooming", "staging"])
 
 # ince ek alan (Arapca/Bati kokenli) istisna kokler: saat -> saatleri, rol -> rolu
 FRONT_EXC = {"saat", "rol", "kontrol", "kabul", "kimlig", "jenerig", "ihlal", "iptal", "istikbal", "dikkat", "harf", "kalp", "alkol", "ideal",
              "usul", "hukuk", "petrol", "protokol", "sembol", "sinyal", "mesul",
-             "sual", "hal", "gol", "istikbal", "sinyal"}
+             "sual", "hal", "gol"}
 
 VOWELS = "aeıioöuüAEIİOÖUÜ"
 BACK = "aıouAIOU"          # kalin unluler
@@ -277,7 +271,9 @@ def harmonize(suffix, stem, front=False):
 
 # tam kelime onceligi: kok eslesmesinin yanlis calistigi formlar
 EXACT = {
- "gecen": "geçen", "uredilir": "üretilir", "uredilen": "üretilen",
+ "gecen": "geçen", "gecerken": "geçerken", "gecerek": "geçerek",
+ "gecince": "geçince", "gecip": "geçip", "gecerse": "geçerse",
+ "uredilir": "üretilir", "uredilen": "üretilen",
  "uretilir": "üretilir", "iletilir": "iletilir", "gecik": "gecik", "gecikti": "gecikti", "ihtiyaci": "ihtiyacı",
  "ihtiyacim": "ihtiyacım", "ihtiyacima": "ihtiyacıma", "ihtiyacini": "ihtiyacını", "ihtiyaca": "ihtiyaca", "analiz": "analiz", "sonucu": "sonucu", "bastiginda": "bastığında", "basildiginda": "basıldığında",
  "basar": "basar", "basma": "basma", "basmak": "basmak", "limidi": "limiti", "limidini": "limitini",
@@ -323,7 +319,7 @@ def harmonize_suffix(suffix, stem, front=False):
 
 
 def fix_word(w):
-    if w in KEEP or w.upper() == w and len(w) > 1:
+    if w in KEEP or (w.upper() == w and len(w) > 1):
         return w
     low = w.lower()
     if low in EXACT:

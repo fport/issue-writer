@@ -1,39 +1,217 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://huggingface.co/datasets/jira-issue-writer/schema/issue.schema.json",
-  "title": "Jira issue draft",
-  "description": "Modelin draft_issue / bug_from_log gorevlerinde urettigi cikti. Jira REST API v3 POST /rest/api/3/issue govdesine dogrudan map edilir.",
-  "type": "object",
-  "required": ["issue_type", "summary", "description", "priority", "labels",
-               "components", "assumptions", "clarifying_questions", "dor_check"],
+  "$defs": {
+    "AcceptanceCriterion": {
+      "description": "Given/When/Then — her kriter tek bir davranisi dogrular.",
+      "properties": {
+        "id": {
+          "pattern": "^AC[0-9]+$",
+          "title": "Id",
+          "type": "string"
+        },
+        "given": {
+          "minLength": 3,
+          "title": "Given",
+          "type": "string"
+        },
+        "when": {
+          "minLength": 3,
+          "title": "When",
+          "type": "string"
+        },
+        "then": {
+          "minLength": 3,
+          "title": "Then",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "given",
+        "when",
+        "then"
+      ],
+      "title": "AcceptanceCriterion",
+      "type": "object"
+    },
+    "DorCheck": {
+      "description": "Definition of Ready sonucu.",
+      "properties": {
+        "ready": {
+          "title": "Ready",
+          "type": "boolean"
+        },
+        "missing": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Missing",
+          "type": "array"
+        }
+      },
+      "required": [
+        "ready"
+      ],
+      "title": "DorCheck",
+      "type": "object"
+    }
+  },
   "additionalProperties": false,
+  "description": "Modelin urettigi cikti. Issue tracker create-issue govdesine dogrudan map edilir; description markdown'dir ve ADF donusumu deterministiktir (scripts/md_to_adf.py). Bu dosya schema/models.py'den uretilir, elle duzenlenmez.",
   "properties": {
-    "issue_type": {"enum": ["Epic", "Story", "Task", "Bug", "Spike", "Sub-task"]},
-    "summary":    {"type": "string", "minLength": 8, "maxLength": 120,
-                   "description": "Emir kipi, tur oneki yok, nokta ile bitmez"},
-    "description":{"type": "string", "minLength": 40,
-                   "description": "Jira wiki markdown; bolum basliklari 'h2. '"},
-    "priority":   {"enum": ["Highest", "High", "Medium", "Low", "Lowest"]},
-    "severity":   {"oneOf": [{"enum": ["Critical", "Major", "Minor", "Trivial"]}, {"type": "null"}],
-                   "description": "Yalnizca Bug icin; Priority'den bagimsizdir"},
-    "labels":     {"type": "array", "maxItems": 6, "items": {"type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"}},
-    "components": {"type": "array", "minItems": 1, "items": {"type": "string"}},
-    "story_points": {"oneOf": [{"enum": [1, 2, 3, 5, 8, 13]}, {"type": "null"}]},
+    "issue_type": {
+      "enum": [
+        "Epic",
+        "Story",
+        "Task",
+        "Bug",
+        "Spike",
+        "Sub-task"
+      ],
+      "title": "Issue Type",
+      "type": "string"
+    },
+    "summary": {
+      "description": "Emir kipi, tur oneki yok, nokta ile bitmez",
+      "maxLength": 120,
+      "minLength": 8,
+      "title": "Summary",
+      "type": "string"
+    },
+    "description": {
+      "description": "Wiki markdown; bolum basliklari 'h2. '",
+      "minLength": 40,
+      "title": "Description",
+      "type": "string"
+    },
+    "priority": {
+      "enum": [
+        "Highest",
+        "High",
+        "Medium",
+        "Low",
+        "Lowest"
+      ],
+      "title": "Priority",
+      "type": "string"
+    },
+    "severity": {
+      "anyOf": [
+        {
+          "enum": [
+            "Critical",
+            "Major",
+            "Minor",
+            "Trivial"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Yalnizca Bug icin; Priority'den bagimsizdir",
+      "title": "Severity"
+    },
+    "labels": {
+      "default": [],
+      "items": {
+        "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+        "type": "string"
+      },
+      "maxItems": 6,
+      "title": "Labels",
+      "type": "array"
+    },
+    "components": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Components",
+      "type": "array"
+    },
+    "story_points": {
+      "anyOf": [
+        {
+          "enum": [
+            1,
+            2,
+            3,
+            5,
+            8,
+            13
+          ],
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Story Points"
+    },
     "acceptance_criteria": {
-      "type": "array", "maxItems": 10,
-      "items": {"type": "object",
-        "required": ["id", "given", "when", "then"],
-        "properties": {"id": {"type": "string", "pattern": "^AC[0-9]+$"},
-                       "given": {"type": "string"}, "when": {"type": "string"},
-                       "then": {"type": "string"}}}},
-    "subtasks":   {"type": "array", "items": {"type": "string"}},
-    "parent_hint":{"oneOf": [{"type": "string"}, {"type": "null"}]},
-    "assumptions":{"type": "array", "items": {"type": "string"},
-                   "description": "Girdide olmayan ama cikti icin gereken her sey buraya yazilir"},
-    "clarifying_questions": {"type": "array", "items": {"type": "string"},
-                   "description": "Cevabi olmadan riskli kalan sorular"},
-    "dor_check":  {"type": "object", "required": ["ready", "missing"],
-                   "properties": {"ready": {"type": "boolean"},
-                                  "missing": {"type": "array", "items": {"type": "string"}}}}
-  }
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/AcceptanceCriterion"
+      },
+      "maxItems": 10,
+      "title": "Acceptance Criteria",
+      "type": "array"
+    },
+    "subtasks": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Subtasks",
+      "type": "array"
+    },
+    "parent_hint": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Parent Hint"
+    },
+    "assumptions": {
+      "default": [],
+      "description": "Girdide olmayan ama cikti icin gereken her sey buraya yazilir",
+      "items": {
+        "type": "string"
+      },
+      "title": "Assumptions",
+      "type": "array"
+    },
+    "clarifying_questions": {
+      "default": [],
+      "description": "Cevabi olmadan riskli kalan sorular",
+      "items": {
+        "type": "string"
+      },
+      "title": "Clarifying Questions",
+      "type": "array"
+    },
+    "dor_check": {
+      "$ref": "#/$defs/DorCheck"
+    }
+  },
+  "required": [
+    "issue_type",
+    "summary",
+    "description",
+    "priority",
+    "components",
+    "dor_check"
+  ],
+  "title": "Issue draft",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
 }

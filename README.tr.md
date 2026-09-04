@@ -159,6 +159,33 @@ Bir oranı ölçerken güven aralığı kabaca `1.96 × √(p(1-p)/n)`:
 Beş örnekle "%80 mi %100 mü" ayırt edilemez. Karar verilecekse 100'ün altına inilmez.
 
 
+## Geliştirme
+
+```bash
+uv sync --group dev          # uv.lock'tan ortam
+uv run pytest                # 77 test
+uv run ruff check .          # lint
+uv run python generator/build.py -n 13000 --out data
+uv run python scripts/validate.py --dir data
+```
+
+CI her push'ta bunların hepsini çalıştırır ve veri setini commit'lenmiş bir kopyaya
+güvenmek yerine yeniden üretir — kalite kapısı, üreticinin bugün ürettiğini test
+etmeli.
+
+**Test yaklaşımı.** `validate.py` *üretilen veriyi* denetler; test paketi *veriyi
+üreten kodu* denetler. En yoğun kapsam Türkçe yazım motorunda, çünkü
+`tests/test_tr_fix.py` içindeki her vaka gerçekten üretilmiş bir hatadan geliyor:
+`-abil-` ekinin uyuma girmemesi, `-ken` ekinin sabit olması, `gece` kökünün `geçen`
+kelimesini kapması, `saat` ve `kontrol` gibi ince ek alan istisnalar. Her düzeltme
+bir teste dönüştü ki hata geri gelemesin.
+
+`schema/models.py` çıktı sözleşmesinin tek kaynağıdır; `issue.schema.json` ondan
+üretilir ve ikisi ayrışırsa CI hata verir. Üreticinin kendisi bilerek üçüncü parti
+bağımlılık taşımaz, böylece veri seti çıplak bir Python kurulumuyla her yerde
+üretilebilir. Pydantic yalnızca doğrulama ve şema üretimi için bir geliştirme
+bağımlılığıdır.
+
 ## Yeni alan eklemek
 
 `generator/banks/` altına yeni bir modül açıp `domain(...)` ve `register(...)`

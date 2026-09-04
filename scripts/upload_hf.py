@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Veri setini Hugging Face Hub'a yukler.
 
 Kurulum:
@@ -9,7 +8,10 @@ Kullanim:
     python scripts/upload_hf.py --repo kullanici-adi/jira-issue-writer
     python scripts/upload_hf.py --repo ... --private
 """
-import argparse, json, os, sys
+import argparse
+import json
+import os
+import sys
 
 
 def sanity(path):

@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
 """Task ve Spike cekirdekleri.
 
 Bunlar domain'den bagimsizdir: her domain'in kendi bilesen/servis adlariyla
 doldurulur. Task = sonucu yalnizca ekibin gordugu is. Spike = ciktisi karar
 olan, sure kutulu arastirma.
 """
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 
 @dataclass
@@ -14,10 +13,14 @@ class Task:
     area: str                 # backend | infra | data | frontend | mobile | qa
     labels: list
     points: int
-    obj_en: str; obj_tr: str
-    ctx_en: str; ctx_tr: str
-    steps_en: list; steps_tr: list
-    done_en: list; done_tr: list
+    obj_en: str
+    obj_tr: str
+    ctx_en: str
+    ctx_tr: str
+    steps_en: list
+    steps_tr: list
+    done_en: list
+    done_tr: list
     domain: str = ""
     component: str = ""
 
@@ -27,11 +30,16 @@ class Spike:
     slug: str
     area: str
     labels: list
-    timebox_en: str; timebox_tr: str
-    q_en: list; q_tr: list
-    scope_en: list; scope_tr: list
-    deliver_en: str; deliver_tr: str
-    crit_en: list; crit_tr: list
+    timebox_en: str
+    timebox_tr: str
+    q_en: list
+    q_tr: list
+    scope_en: list
+    scope_tr: list
+    deliver_en: str
+    deliver_tr: str
+    crit_en: list
+    crit_tr: list
     domain: str = ""
     component: str = ""
 

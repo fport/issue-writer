@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Pattern bazli Acceptance Criteria ureteci.
 
 Her AC bir Given/When/Then uclusudur. Sablonlar {obj}, {surface}, {persona}
@@ -610,7 +609,8 @@ def build_acs(feature, rng, lang, count=None):
     happy = [a for a in pool if a[0] == "happy"]
     negative = [a for a in pool if a[0] in ("error", "edge", "security")]
     rest = [a for a in pool if a not in happy and a not in negative]
-    rng.shuffle(negative); rng.shuffle(rest)
+    rng.shuffle(negative)
+    rng.shuffle(rest)
 
     n = count or rng.choice([3, 3, 4, 4, 5, 5, 6])
     chosen = happy[:1] + negative[:max(2, n - 2)] + rest

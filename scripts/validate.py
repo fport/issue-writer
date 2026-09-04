@@ -1,6 +1,10 @@
-# -*- coding: utf-8 -*-
 """Veri seti kalite denetimi. Hata bulursa cikis kodu 1 doner."""
-import json, re, sys, collections, argparse, os
+import argparse
+import json
+import os
+import re
+import sys
+from pathlib import Path
 
 ENUM_TYPE = {"Epic", "Story", "Task", "Bug", "Spike", "Sub-task"}
 ENUM_PRIO = {"Highest", "High", "Medium", "Low", "Lowest"}
@@ -60,9 +64,8 @@ def check_row(row, idx, errors, warns):
             errors.append(f"[{idx}] {task}: '{k}' alani eksik")
 
     issue = obj.get("improved_issue", obj)
-    if "issue_type" in issue:
-        if issue["issue_type"] not in ENUM_TYPE:
-            errors.append(f"[{idx}] gecersiz issue_type: {issue['issue_type']}")
+    if "issue_type" in issue and issue["issue_type"] not in ENUM_TYPE:
+        errors.append(f"[{idx}] gecersiz issue_type: {issue['issue_type']}")
     if issue.get("priority") and issue["priority"] not in ENUM_PRIO:
         errors.append(f"[{idx}] gecersiz priority: {issue['priority']}")
     if issue.get("severity") and issue["severity"] not in ENUM_SEV:
@@ -116,7 +119,9 @@ def main():
         p = os.path.join(a.dir, f"{split}.jsonl")
         if not os.path.exists(p):
             continue
-        rows = [json.loads(l) for l in open(p, encoding="utf-8")]
+        rows = [json.loads(line)
+                for line in Path(p).read_text(encoding="utf-8").splitlines()
+                if line.strip()]
         by_split[split] = rows
         all_rows += rows
         for i, r in enumerate(rows):

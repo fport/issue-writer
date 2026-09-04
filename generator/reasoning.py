@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Dusunme zinciri (thinking) uretimi.
 
 Muhakeme zaten verinin icinde: issue tipi karari, severity/priority ayrimi,
@@ -9,7 +8,6 @@ Cikti model-agnostiktir: `<think> ... </think>` blogu. Gemma 4 thinking icin
 egitim aninda `<|channel>thought ... <channel|>` bicimine esleyin; Qwen/DeepSeek
 tarzi modellerde blok oldugu gibi kullanilir.
 """
-import random
 
 TYPE_WHY = {
 "Story": {"en": "the outcome is visible to the customer and nothing is broken — this is new user-facing value",
@@ -170,7 +168,7 @@ def for_estimate(out, lang, rng):
 def for_ac(out, lang, rng):
     cov = out.get("coverage", [])
     return "\n".join([rng.choice(OPEN[lang]),
-        ({"en": f"A criterion is only useful if QA can verify it without asking a question, so each one names an observable outcome.",
+        ({"en": "A criterion is only useful if QA can verify it without asking a question, so each one names an observable outcome.",
           "tr": "Bir kriter ancak QA soru sormadan doğrulayabiliyorsa işe yarar, o yüzden her biri gözlenebilir bir sonuç belirtiyor."})[lang],
         ({"en": f"Coverage: {', '.join(cov)} — the happy path alone would leave the error and boundary behaviour undefined.",
           "tr": f"Kapsam: {', '.join(cov)} — yalnızca mutlu yol, hata ve sınır davranışını tanımsız bırakırdı."})[lang]])

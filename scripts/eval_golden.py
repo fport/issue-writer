@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Gercek girdiler uzerinde degerlendirme.
 
 Sentetik test seti "ureticinin kalibini ogrendi mi" sorusunu olcer.
@@ -7,7 +6,14 @@ Bu script "gercek bir girdide ise yarar mi" sorusunu olcer.
     python scripts/eval_golden.py --model out/adapter --base unsloth/gemma-4-E4B-it
     python scripts/eval_golden.py --compare out/adapter --base unsloth/gemma-4-E4B-it
 """
-import argparse, json, os, random, re, sys, collections
+import argparse
+import collections
+import json
+import os
+import random
+import re
+import sys
+from pathlib import Path
 
 VER = re.compile(r"\b\d+\.\d+(?:\.\d+)?\b")
 REQ = ["issue_type", "summary", "description", "priority", "labels", "components"]
@@ -62,7 +68,8 @@ def rule_check(pred_text, source_text):
 def load_golden(path):
     if not os.path.exists(path):
         sys.exit(f"{path} yok. data/golden/README.md dosyasindaki formati kullan.")
-    rows = [json.loads(l) for l in open(path, encoding="utf-8") if l.strip()]
+    text = Path(path).read_text(encoding="utf-8")
+    rows = [json.loads(line) for line in text.splitlines() if line.strip()]
     if not rows:
         sys.exit("altin set bos.")
     return rows
@@ -106,7 +113,7 @@ def load_model(base, adapter=None):
 def report(name, preds, rows):
     agg = collections.defaultdict(list)
     by = collections.defaultdict(lambda: collections.defaultdict(list))
-    for pred, r in zip(preds, rows):
+    for pred, r in zip(preds, rows, strict=False):
         m, _ = rule_check(pred, r["input"])
         for k, v in m.items():
             agg[k].append(v)
@@ -141,7 +148,11 @@ def main():
         m, t = load_model(a.base)
         runs["A"] = generate(m, t, rows)
         del m
-        import torch, gc; gc.collect(); torch.cuda.empty_cache()
+        import gc
+
+        import torch
+        gc.collect()
+        torch.cuda.empty_cache()
     m, t = load_model(a.base, a.model)
     runs["B" if a.compare else "egitilmis"] = generate(m, t, rows)
 

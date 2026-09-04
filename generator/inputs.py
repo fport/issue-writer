@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Ham girdi ureticileri.
 
 Model, urun ekiplerinin gercekte urettigi dagitik metinleri gorur:
@@ -183,8 +182,8 @@ def degrade(text, level, lang, rng, item=None, kind=None):
     pat_env = ("env:", "environment", "ortam:")
     pat_exp = ("expected", "beklenen", "should be", "olması gereken")
     cands = []
-    for i, l in enumerate(lines):
-        low = l.lower()
+    for i, ln in enumerate(lines):
+        low = ln.lower()
         if any(k in low for k in pat_env):
             cands.append((i, "environment"))
         elif any(k in low for k in pat_exp):

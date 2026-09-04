@@ -1,14 +1,14 @@
-# -*- coding: utf-8 -*-
 """Egitim ornegi ureticileri: 10 gorev tipi.
 
 Her uretici {"messages": [...], "meta": {...}} dondurur.
 Assistant cikti her zaman gecerli JSON'dur ve schema/issue.schema.json'a uyar.
 """
 import json
+
 import fields as FL
 import render as R
 from ac_patterns import build_acs
-from inputs import make_feature_input, make_bug_input
+from inputs import make_bug_input, make_feature_input
 
 SYSTEM = {
 "en": [
@@ -154,7 +154,7 @@ def _ctx_vars(item, domain, lang, rng):
 
 def _labels(item, domain, rng, extra=()):
     base = list(item.labels)
-    pool = [l for l in FL.LABEL_POOL if l not in base]
+    pool = [x for x in FL.LABEL_POOL if x not in base]
     rng.shuffle(pool)
     out = base + pool[:rng.randint(0, 2)] + list(extra)
     return out[:6]
@@ -360,7 +360,6 @@ def _instr(kind, lang, rng):
 def t_draft_issue(item, domain, lang, rng, kind, completeness="complete"):
     """Ham girdi -> tam Jira issue JSON."""
     from inputs import degrade
-    missing = ()
     if kind == "feature":
         raw = make_feature_input(item, domain, lang, rng.choice(
             ["slack", "email", "meeting_note", "support_ticket", "oneliner",
@@ -511,7 +510,6 @@ def t_split_epic(epic, domain, lang, rng):
     goal = epic.goal_en if lang == "en" else epic.goal_tr
     problem = epic.problem_en if lang == "en" else epic.problem_tr
     metric = epic.metric_en if lang == "en" else epic.metric_tr
-    pts = [1, 2, 3, 5, 8, 13]
     children = []
     for i, s in enumerate(stories, 1):
         p = rng.choice([3, 5, 5, 8, 8, 13])
@@ -521,7 +519,7 @@ def t_split_epic(epic, domain, lang, rng):
             "summary": s if len(s) <= 118 else s[:115] + "...",
             "story_points": p,
             "independently_shippable": True,
-            "why_separate": ({"en": f"Delivers value on its own and can be tested without the other children.",
+            "why_separate": ({"en": "Delivers value on its own and can be tested without the other children.",
                               "tr": "Tek başına değer üretir ve diğer alt kayıtlar olmadan test edilebilir."})[lang],
         })
     seq = ({"en": "Ship 1 and 2 first: they are prerequisites and produce the measurement needed for the rest.",

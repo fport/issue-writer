@@ -1,6 +1,8 @@
-# -*- coding: utf-8 -*-
 """tr_spans.json'daki Turkce string'leri tr_fix ile duzeltip kaynaga yazar."""
-import json, sys, collections
+import collections
+import json
+import sys
+
 sys.path.insert(0, "scripts")
 from tr_fix import fix_text
 
@@ -16,7 +18,8 @@ for path, items in by_file.items():
     items.sort(key=lambda s: (s["line"], s["col"]), reverse=True)
     for s in items:
         if s["line"] != s["eline"]:
-            print("ATLANDI (cok satirli):", s["text"][:40]); continue
+            print("ATLANDI (cok satirli):", s["text"][:40])
+            continue
         new = fix_text(s["text"])
         if new == s["text"]:
             continue

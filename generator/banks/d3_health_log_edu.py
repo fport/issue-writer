@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-from .core import domain, register, F, B, E
+from .core import B, E, F, domain, register
 
 # ---------------------------------------------------------------- HEALTHCARE
 d = domain("health", "telehealth and clinic booking platform", "tele-tip ve klinik randevu platformu", "MED",

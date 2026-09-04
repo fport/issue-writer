@@ -1,10 +1,10 @@
-# -*- coding: utf-8 -*-
 """LoRA adapter'ini temel modele birlestirir ve istege bagli Hub'a yukler.
 
     python scripts/merge_lora.py --adapter out/jira-writer --out out/jira-writer-merged
     python scripts/merge_lora.py --adapter out/jira-writer --push kullanici/jira-writer-7b
 """
-import argparse, os
+import argparse
+import os
 
 
 def main():
@@ -16,8 +16,8 @@ def main():
     a = ap.parse_args()
 
     import torch
-    from transformers import AutoModelForCausalLM, AutoTokenizer
     from peft import PeftModel
+    from transformers import AutoModelForCausalLM, AutoTokenizer
 
     out = a.out or (a.adapter.rstrip("/") + "-merged")
     tok = AutoTokenizer.from_pretrained(a.base)

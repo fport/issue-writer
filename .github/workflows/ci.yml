@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dev dependencies
+        run: uv sync --group dev
+
+      - name: Lint
+        run: uv run ruff check .
+
+      - name: Tests
+        run: uv run pytest
+
+      # The dataset is not committed; it is regenerated here so the quality gate
+      # runs against what the generator actually produces today.
+      - name: Generate dataset
+        run: |
+          uv run python generator/build.py -n 3000 --out data
+          uv run python generator/build.py -n 1000 --thinking --out data/thinking
+
+      - name: Validate dataset
+        run: |
+          uv run python scripts/validate.py --dir data
+          uv run python scripts/validate.py --dir data/thinking
+
+      - name: Schema is generated, not hand-edited
+        run: |
+          uv run python schema/models.py > /tmp/schema.json
+          diff <(uv run python -c "import json,sys;print(json.dumps(json.load(open('/tmp/schema.json'))['properties'],sort_keys=True))") \
+               <(uv run python -c "import json,sys;print(json.dumps(json.load(open('schema/issue.schema.json'))['properties'],sort_keys=True))")

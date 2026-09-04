@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-from .core import domain, register, F, B, E
+from .core import B, E, F, domain, register
 
 # ---------------------------------------------------------------- PLATFORM / DEVOPS
 d = domain("platform", "internal developer platform", "şirket içi geliştirici platformu", "PLAT",

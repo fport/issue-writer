@@ -1,17 +1,24 @@
-# -*- coding: utf-8 -*-
 """Veri seti uretimi.
 
 Sizinti onlemi: feature/bug/epic slug'larinin bir kismi tamamen test/val'e
 ayrilir; ayni cekirdek hem egitimde hem testte gorunmez.
 """
-import argparse, hashlib, json, random, sys, os, collections
+import argparse
+import collections
+import hashlib
+import json
+import os
+import random
+import sys
+
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from banks import DOMAINS
-from banks.tech import TASKS, SPIKES
 import copy
-import tasks as T
+
 import reasoning as RSN
+import tasks as T
+from banks import DOMAINS
+from banks.tech import SPIKES, TASKS
 
 # gorev agirliklari: draft_issue ana gorev, digerleri destekleyici
 WEIGHTS = {
@@ -130,25 +137,25 @@ def build(target, seed, holdout_ratio=0.10, thinking=False):
     # cekirdek TURUNE gore katmanlidir: aksi halde test setinde bug ya da epic
     # tabanli gorevlerden yeterli ornek kalmiyor.
     by_kind_slugs = collections.defaultdict(set)
-    for kind, item, _ in items:
-        by_kind_slugs[kind].add(item.slug)
+    for item_kind, item, _ in items:
+        by_kind_slugs[item_kind].add(item.slug)
     holdout = set()
-    for kind, ss in by_kind_slugs.items():
+    for _item_kind, ss in by_kind_slugs.items():
         ss = sorted(ss)
         rng.shuffle(ss)
         holdout |= set(ss[:max(1, round(len(ss) * holdout_ratio))])
 
     task_pool = [t for t, w in WEIGHTS.items() for _ in range(w)]
     by_kind = collections.defaultdict(list)
-    for kind, item, domain in items:
-        by_kind[kind].append((kind, item, domain))
+    for entry in items:
+        by_kind[entry[0]].append(entry)
 
     seen, rows = set(), []
     per_task = collections.Counter()
     # tekrara dusmemek icin gorev basina ust sinir (hedef payinin 1.35 kati)
     cap = {t: int(target * w / sum(WEIGHTS.values()) * 1.35) + 5
            for t, w in WEIGHTS.items()}
-    stall, attempts, max_attempts = 0, 0, target * 120
+    _stall, attempts, max_attempts = 0, 0, target * 120
 
     while len(rows) < target and attempts < max_attempts:
         attempts += 1

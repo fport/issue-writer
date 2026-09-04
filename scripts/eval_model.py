@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Egitilmis modeli test setinde olcer.
 
 Metrikler:
@@ -14,7 +13,12 @@ Kullanim:
     python scripts/eval_model.py --model out/jira-writer --base Qwen/Qwen2.5-7B-Instruct
     python scripts/eval_model.py --model out/jira-writer --limit 200 --task draft_issue
 """
-import argparse, json, re, collections, sys
+import argparse
+import collections
+import json
+import re
+import sys
+from pathlib import Path
 
 ENUM_TYPE = {"Epic", "Story", "Task", "Bug", "Spike", "Sub-task"}
 ENUM_PRIO = {"Highest", "High", "Medium", "Low", "Lowest"}
@@ -64,7 +68,9 @@ def main():
     import torch
     from transformers import AutoModelForCausalLM, AutoTokenizer
 
-    rows = [json.loads(l) for l in open(a.data, encoding="utf-8")]
+    rows = [json.loads(line)
+            for line in Path(a.data).read_text(encoding="utf-8").splitlines()
+            if line.strip()]
     if a.task:
         rows = [r for r in rows if r["meta"]["task"] == a.task]
     rows = rows[:a.limit]
@@ -100,7 +106,7 @@ def main():
     print(f"\n{len(rows)} ornek · model {a.model}")
     print(f"{'metrik':20} {'tumu':>8} {'en':>8} {'tr':>8}")
     for k in sorted(agg):
-        def pct(d):
+        def pct(d, k=k):
             v = d.get(k, [])
             return f"{sum(v)/len(v)*100:6.1f}%" if v else "     - "
         print(f"{k:20} {pct(agg):>8} {pct(by_lang['en']):>8} {pct(by_lang['tr']):>8}")

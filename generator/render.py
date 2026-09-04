@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Jira wiki markdown govdesi ureticileri.
 
 Cikti research/JIRA_STANDARDS.md bolum 3-7'deki bolum siralamasina birebir uyar.

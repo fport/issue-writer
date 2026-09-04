@@ -1,9 +1,11 @@
-# -*- coding: utf-8 -*-
 """banks/*.py icindeki TURKCE string'leri AST ile bulur.
 Konum kurali: F/B/E cagrilarinda (en, tr) tuple'larinin 2. elemani,
 ent dict'inde *_tr anahtarlari, domain() 3. argumani, E stories'in 2. listesi.
 """
-import ast, glob, json, sys
+import ast
+import glob
+import json
+import sys
 
 TR_SPANS = []   # (path, lineno, col_offset, end_lineno, end_col_offset, value)
 
@@ -57,7 +59,9 @@ json.dump([{"path": p, "line": l, "col": c, "eline": el, "ecol": ec, "text": t}
           open("scripts/tr_spans.json", "w", encoding="utf-8"),
           ensure_ascii=False, indent=1)
 
-import re, collections
+import collections
+import re
+
 words = collections.Counter()
 for *_, t in TR_SPANS:
     for w in re.findall(r"[A-Za-z']+", t):

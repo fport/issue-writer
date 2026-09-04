@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """LLM-as-judge: uretilen Jira kayitlarini rubrik ile puanlar.
 
 Kural denetimi (validate.py / eval_golden.py) "sema dogru mu" sorusunu cevaplar.
@@ -13,7 +12,12 @@ Yargic modelin onyargisi vardir (kendi uslubunu sever). Bu yuzden:
     python scripts/eval_judge.py --preds out/preds.jsonl
     python scripts/eval_judge.py --preds out/preds.jsonl --compare out/base_preds.jsonl
 """
-import argparse, json, os, statistics, sys, collections
+import argparse
+import collections
+import json
+import os
+import statistics
+import sys
 
 RUBRIC = """You are grading a Jira issue that a model generated from a raw product input.
 Grade only what you can observe in the text. Do not reward verbosity or polish.
@@ -107,7 +111,7 @@ def run(client, model, rows, label):
 
 def load_preds(path):
     """Beklenen satir: {"input": "...", "output": "<model ciktisi JSON metni>"}"""
-    return [json.loads(l) for l in open(path, encoding="utf-8") if l.strip()]
+    return [json.loads(line) for line in open(path, encoding="utf-8") if line.strip()]
 
 
 def main():

@@ -53,6 +53,7 @@ scripts/
   eval_judge.py          LLM-as-judge, rubric based
   tr_fix.py              Turkish diacritic restoration engine
   tr_tools/              helpers for adding new content banks
+tests/                   pytest suite (engine regressions, rules, schema)
 notebooks/
   gemma4_unsloth_finetune.ipynb
 data/
@@ -171,6 +172,33 @@ via TRL). Note that TRL's `assistant_only_loss=True` requires a `{% generation %
 block in the chat template — where it is missing, loss is silently computed over the
 whole sequence. The script uses prompt-completion format instead, which works on any
 model.
+
+## Development
+
+```bash
+uv sync --group dev          # environment from uv.lock
+uv run pytest                # 77 tests
+uv run ruff check .          # lint
+uv run python generator/build.py -n 13000 --out data
+uv run python scripts/validate.py --dir data
+```
+
+CI runs all of the above on every push, and regenerates the dataset rather than
+trusting a committed copy — the quality gate should test what the generator
+produces today.
+
+**Testing philosophy.** `validate.py` checks the *generated data*; the test suite
+checks the *code that generates it*. The Turkish orthography engine has the densest
+coverage because every case in `tests/test_tr_fix.py` comes from a bug that actually
+shipped: the `-abil-` suffix not harmonising, `-ken` being fixed, root collisions
+like `gece` swallowing `geçen`, front-harmony exceptions such as `saat` and
+`kontrol`. Each fix became a test so the mistake cannot return.
+
+`schema/models.py` is the single source of truth for the output contract;
+`issue.schema.json` is generated from it and CI fails if the two drift apart. The
+generator itself deliberately has no third-party dependencies, so the dataset can be
+produced anywhere with a bare Python install. Pydantic is a dev dependency used for
+validation and schema generation only.
 
 ## Adding a domain
 

@@ -1,7 +1,7 @@
-# -*- coding: utf-8 -*-
 """Jira wiki markdown -> Atlassian Document Format (ADF).
 
-Model markdown uretir; Jira Cloud v3 API'si description alaninda ADF bekler.
+Model markdown uretir
+Jira Cloud v3 API'si description alaninda ADF bekler.
 Donusum deterministiktir, modele ADF ogretmeye gerek yoktur.
 
 Kullanim:
@@ -49,7 +49,8 @@ def to_adf(md):
         elif line.strip().startswith("{code}"):
             buf, i = [], i + 1
             while i < len(lines) and not lines[i].strip().startswith("{code}"):
-                buf.append(lines[i]); i += 1
+                buf.append(lines[i])
+                i += 1
             i += 1
             content.append({"type": "codeBlock", "attrs": {},
                             "content": [{"type": "text", "text": "\n".join(buf) or " "}]})
@@ -73,7 +74,8 @@ def to_adf(md):
             buf = []
             while i < len(lines) and lines[i].strip() and not re.match(
                     r"^(h2\. |\* |# |\{code\})", lines[i]):
-                buf.append(lines[i]); i += 1
+                buf.append(lines[i])
+                i += 1
             content.append({"type": "paragraph", "content": _inline(" ".join(buf))})
     return {"version": 1, "type": "doc", "content": content}
 
@@ -115,8 +117,10 @@ def to_jira_payload(issue, project_key, severity_field=None, points_field=None,
 
 
 if __name__ == "__main__":
-    import json, sys
-    row = json.loads(open("data/test.jsonl", encoding="utf-8").readline())
+    import json
+    from pathlib import Path
+    first = Path("data/test.jsonl").read_text(encoding="utf-8").split("\n")[0]
+    row = json.loads(first)
     issue = json.loads(row["messages"][2]["content"])
     if "description" in issue:
         print(json.dumps(to_jira_payload(issue, "DEMO"), ensure_ascii=False, indent=2)[:1200])

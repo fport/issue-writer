@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Qwen2.5-7B-Instruct uzerinde QLoRA ile fine-tune.
 
 Donanim: 1x24GB GPU (4090/A10G) yeterli. Mac icin README'deki MLX yolunu izleyin.
@@ -11,7 +10,7 @@ Kullanim:
     python scripts/train_qlora.py --data data --out out/jira-writer-qwen7b
     python scripts/train_qlora.py --model Qwen/Qwen2.5-3B-Instruct --epochs 2
 """
-import argparse, os
+import argparse
 
 
 def main():
@@ -30,9 +29,9 @@ def main():
 
     import torch
     from datasets import load_dataset
-    from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
     from peft import LoraConfig, prepare_model_for_kbit_training
-    from trl import SFTTrainer, SFTConfig
+    from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+    from trl import SFTConfig, SFTTrainer
 
     ds = load_dataset("json", data_files={
         "train": f"{a.data}/train.jsonl",

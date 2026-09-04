@@ -1,8 +1,9 @@
-# -*- coding: utf-8 -*-
 """ac_patterns.py icindeki Turkce (3. eleman) tuple'lari duzeltir.
 Byte-offset tuzagina dusmemek icin satirlari BYTE olarak dilimler.
 """
-import ast, sys
+import ast
+import sys
+
 sys.path.insert(0, "scripts")
 from tr_fix import fix_text
 

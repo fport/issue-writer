@@ -1,5 +1,6 @@
 """Cekirdek veri modelleri ve icerik havuzu kayit mekanizmasi."""
 from __future__ import annotations
+
 from dataclasses import dataclass, field
 
 

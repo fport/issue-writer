@@ -23,3 +23,8 @@ data/golden/preds*.jsonl
 
 # OS
 .DS_Store
+
+# uv / test
+.pytest_cache/
+.ruff_cache/
+.uv/

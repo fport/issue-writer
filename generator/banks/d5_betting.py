@@ -1,10 +1,9 @@
-# -*- coding: utf-8 -*-
 """Lisansli spor bahisleri ve casino platformu.
 
 Bu alan veri setine uc temayi getirir: saglayici (provider) entegrasyonu,
 gercek zamanli oran/gecikme kisitlari ve mevzuat/sorumlu oyun yukumlulukleri.
 """
-from .core import domain, register, F, B, E
+from .core import B, E, F, domain, register
 
 d = domain("betting", "licensed sports betting and casino platform",
            "lisanslı spor bahisleri ve casino platformu", "BET",
