@@ -29,3 +29,6 @@ data/golden/preds*.jsonl
 .ruff_cache/
 .uv/
 unsloth_compiled_cache/
+
+# kisisel paylasim taslaklari
+POST.md
