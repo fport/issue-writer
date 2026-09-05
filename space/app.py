@@ -46,25 +46,29 @@ TR_WORDS = (" bir ", " için ", " ve ", " bu ", " ile ", " var ", " yok ", " ama
 
 source = MODEL_ID or BASE_ID
 tokenizer = AutoTokenizer.from_pretrained(source)
-# device_map="cuda" streams the shards straight onto the device. Two things go
-# wrong without it on ZeroGPU: "auto" sees no reserved GPU at import time and
-# offloads to disk, and loading onto CPU first needs ~16 GB of RAM the Space does
-# not have, so the process is killed with no traceback.
+# Everything below stays on CPU until the very last line. On ZeroGPU no real GPU
+# exists at import time: device_map="auto" offloads to disk, and device_map="cuda"
+# makes peft ask safetensors to read straight onto the device, which the spaces
+# patching layer cannot fake ("No CUDA GPUs are available"). The final .to("cuda")
+# is the one call spaces *does* intercept, so that is the only device move here.
 model = AutoModelForCausalLM.from_pretrained(
-    source,
-    dtype=torch.bfloat16,
-    device_map="cuda" if torch.cuda.is_available() else None,
-    attn_implementation="sdpa",
+    source, dtype=torch.bfloat16, attn_implementation="sdpa"
 )
 if ADAPTER_ID and not MODEL_ID:
     # peft's own API rather than transformers' model.load_adapter(): that bridge
     # imports private peft symbols and breaks whenever the two versions drift.
-    # The wrapper is left in place — merge_and_unload() would run real matmuls at
-    # import time, and no GPU is attached until a @spaces.GPU call.
+    # torch_device is not optional here. peft defaults it to infer_device(), which
+    # answers "cuda" because the spaces layer reports a GPU that does not exist
+    # yet, and safetensors then fails reading the adapter straight onto it.
+    # Merging on CPU is plain matmul, no CUDA, and it drops the LoRA wrapper so
+    # generation runs at base speed.
     from peft import PeftModel
 
-    model = PeftModel.from_pretrained(model, ADAPTER_ID)
+    model = PeftModel.from_pretrained(model, ADAPTER_ID, torch_device="cpu")
+    model = model.merge_and_unload()
 model.eval()
+if torch.cuda.is_available():
+    model = model.to("cuda")
 
 LOADED = MODEL_ID or (f"{BASE_ID} + {ADAPTER_ID}" if ADAPTER_ID else BASE_ID)
 
