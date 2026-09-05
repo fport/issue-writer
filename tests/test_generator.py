@@ -111,3 +111,14 @@ def test_docs_match_the_data(small_dataset):
         assert claimed[0] == sum(counts.values()), f"{name}: toplam eskimis"
         assert claimed[1:] == [counts["train"], counts["validation"], counts["test"]], (
             f"{name}: split sayilari eskimis, gercek {counts}")
+
+
+def test_meta_schema_is_uniform(small_dataset):
+    """Her satirdaki meta ayni anahtarlari tasimali.
+
+    Uc farkli meta semasi (completeness ve target_type gorevle geliyordu) Hugging
+    Face'in sema cikarimini "Json" tipine dusurdu ve load_dataset bazi datasets
+    surumlerinde hata verdi.
+    """
+    shapes = {tuple(sorted(r["meta"])) for r in small_dataset}
+    assert len(shapes) == 1, f"{len(shapes)} farkli meta semasi: {shapes}"

@@ -129,6 +129,19 @@ def add_thinking(ex, rng):
     return ex
 
 
+# meta'nin her satirda AYNI anahtarlari tasimasi gerekir. Aksi halde Hugging
+# Face sema cikarimi alani "Json" tipine dusuruyor ve bazi datasets surumleri
+# o tipi taniyamayip load_dataset asamasinda hata veriyor.
+META_KEYS = ("task", "kind", "lang", "domain", "slug", "split", "hash",
+             "completeness", "target_type", "variant")
+
+
+def normalise_meta(rows):
+    for r in rows:
+        r["meta"] = {k: r["meta"].get(k) for k in META_KEYS}
+    return rows
+
+
 def build(target, seed, holdout_ratio=0.10, thinking=False):
     rng = random.Random(seed)
     items = all_items()
@@ -180,7 +193,7 @@ def build(target, seed, holdout_ratio=0.10, thinking=False):
         ex["meta"]["split"] = "holdout" if item.slug in holdout else "train"
         ex["meta"]["hash"] = key[:12]
         rows.append(ex)
-    return rows
+    return normalise_meta(rows)
 
 
 def split_rows(rows, rng):
