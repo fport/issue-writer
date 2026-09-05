@@ -64,7 +64,7 @@ data/
 
 ## Dataset
 
-13,000 examples · 10,937 train / 1,031 validation / 1,032 test · 10 tasks ·
+13,000 examples · 10,895 train / 1,052 validation / 1,053 test · 10 tasks ·
 10 domains · 2 languages. Full breakdown in [DATASET_CARD.md](DATASET_CARD.md).
 
 Three design decisions shape it:
@@ -176,7 +176,8 @@ model.
 ## Development
 
 ```bash
-uv sync --group dev          # environment from uv.lock
+uv sync --group dev          # environment from uv.lock (there is no requirements.txt:
+                             # pyproject plus the lock file is the single source)
 uv run pytest                # 77 tests
 uv run ruff check .          # lint
 uv run python generator/build.py -n 13000 --out data

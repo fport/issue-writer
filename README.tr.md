@@ -63,7 +63,7 @@ SAMPLES.md               veri setinden yedi örnek kayıt
 
 ## Veri seti
 
-13.000 örnek · 10.948 train / 1.026 validation / 1.026 test · 10 görev · 9 alan ·
+13.000 örnek · 10.895 train / 1.052 validation / 1.053 test · 10 görev · 9 alan ·
 2 dil. Ayrıntılı tablo ve şema için [DATASET_CARD.md](DATASET_CARD.md).
 
 Üç tasarım kararı veri setinin karakterini belirler:
@@ -162,7 +162,8 @@ Beş örnekle "%80 mi %100 mü" ayırt edilemez. Karar verilecekse 100'ün altı
 ## Geliştirme
 
 ```bash
-uv sync --group dev          # uv.lock'tan ortam
+uv sync --group dev          # uv.lock'tan ortam (requirements.txt yok: tek kaynak
+                             # pyproject.toml ve kilit dosyasi)
 uv run pytest                # 77 test
 uv run ruff check .          # lint
 uv run python generator/build.py -n 13000 --out data

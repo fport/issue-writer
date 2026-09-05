@@ -83,3 +83,31 @@ def test_vague_input_produces_questions(small_dataset):
         o = json.loads(r["messages"][2]["content"])
         assert o["assumptions"] or o["clarifying_questions"]
         assert o["dor_check"]["ready"] is False
+
+
+def test_docs_match_the_data(small_dataset):
+    """Dokumandaki sayilar veriyle uyusmali.
+
+    README ve dataset card'daki split sayilari elle guncelleniyordu ve iki kez
+    eskidi. Bu test veri seti uretilmisse kontrol eder; uretilmemisse atlar.
+    """
+    import re
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    if not (root / "data/train.jsonl").exists():
+        pytest.skip("veri seti uretilmemis")
+
+    counts = {s: sum(1 for _ in open(root / f"data/{s}.jsonl", encoding="utf-8"))
+              for s in ("train", "validation", "test")}
+
+    for name in ("README.md", "DATASET_CARD.md"):
+        text = (root / name).read_text(encoding="utf-8")
+        m = re.search(r"([\d,]+) examples · ([\d,]+) train / ([\d,]+) validation "
+                      r"/ ([\d,]+) test", text)
+        if not m:
+            continue
+        claimed = [int(x.replace(",", "")) for x in m.groups()]
+        assert claimed[0] == sum(counts.values()), f"{name}: toplam eskimis"
+        assert claimed[1:] == [counts["train"], counts["validation"], counts["test"]], (
+            f"{name}: split sayilari eskimis, gercek {counts}")

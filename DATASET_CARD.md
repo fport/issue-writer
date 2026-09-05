@@ -65,17 +65,17 @@ the rejected alternative alongside the correct answer (hard negatives).
 
 | Task | train | validation | test | Total |
 |---|---:|---:|---:|---:|
-| `draft_issue` — raw input → complete Jira issue | 3895 | 359 | 336 | 4590 |
-| `add_acceptance_criteria` — story → Given/When/Then | 1117 | 136 | 154 | 1407 |
-| `bug_from_log` — Sentry alert / log → bug report | 1207 | 57 | 60 | 1324 |
-| `classify_type` — issue type + rationale + rejected alternative | 1006 | 81 | 82 | 1169 |
-| `breakdown_subtasks` — story → sub-tasks with estimates | 741 | 94 | 89 | 924 |
-| `improve_ticket` — rewrite a badly written ticket | 674 | 67 | 78 | 819 |
-| `estimate_points` — Fibonacci estimate + drivers | 652 | 76 | 77 | 805 |
-| `review_dor` — Definition of Ready check | 553 | 86 | 81 | 720 |
-| `split_epic` — epic → independently shippable children | 545 | 43 | 34 | 622 |
-| `triage_priority` — severity / priority + SLA | 558 | 27 | 35 | 620 |
-| **Total** | **10948** | **1026** | **1026** | **13000** |
+| `draft_issue` — raw input → complete issue | 3878 | 369 | 356 | 4603 |
+| `add_acceptance_criteria` — story → Given/When/Then | 1086 | 149 | 139 | 1374 |
+| `bug_from_log` — Sentry alert / log → bug report | 1157 | 68 | 63 | 1288 |
+| `classify_type` — issue type + rationale + rejected alternative | 949 | 91 | 92 | 1132 |
+| `breakdown_subtasks` — story → sub-tasks with estimates | 757 | 80 | 102 | 939 |
+| `improve_ticket` — rewrite a badly written ticket | 677 | 59 | 78 | 814 |
+| `estimate_points` — Fibonacci estimate + drivers | 656 | 76 | 77 | 809 |
+| `review_dor` — Definition of Ready check | 590 | 86 | 78 | 754 |
+| `triage_priority` — severity / priority + SLA | 591 | 33 | 22 | 646 |
+| `split_epic` — epic → independently shippable children | 554 | 41 | 46 | 641 |
+| **Total** | **10895** | **1052** | **1053** | **13000** |
 
 ## Thinking variant
 
