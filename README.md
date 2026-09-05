@@ -149,6 +149,31 @@ Confidence interval for a proportion is roughly `1.96 × √(p(1-p)/n)`:
 
 Five examples cannot separate 80% from 100%. Do not go below 100 for a decision.
 
+## Publishing
+
+The dataset is not committed to this repository; it is regenerated from the seeded
+generator. Publishing is a deliberate action rather than something that rides along
+with a push, because it is outward-facing — a bad commit would otherwise become a
+bad public dataset.
+
+Two ways to publish, both running the full gate first (generate → validate → tests):
+
+```bash
+# locally
+uv run python generator/build.py -n 13000 --out data
+uv run python generator/build.py -n 13000 --thinking --out data/thinking
+uv run python scripts/validate.py --dir data
+uv run python scripts/upload_hf.py --repo <user>/issue-writer-tr-en
+```
+
+Or from the Actions tab: **Publish dataset** → *Run workflow*. It takes the repo
+name and example count as inputs and has a dry-run switch that generates and
+validates without uploading. Tagging a release (`v*`) triggers the same job.
+
+The workflow needs an `HF_TOKEN` secret with write access
+(*Settings → Secrets and variables → Actions*). Without it the upload step fails
+with a clear message rather than half-publishing.
+
 ## Training
 
 The recommended path is

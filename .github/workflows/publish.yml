@@ -1,0 +1,76 @@
+name: Publish dataset
+
+# Publishing is an outward action, so it does not ride along with every push.
+# Trigger it deliberately: from the Actions tab, or by tagging a release.
+on:
+  workflow_dispatch:
+    inputs:
+      repo:
+        description: "Hugging Face dataset repo"
+        default: "fport/issue-writer-tr-en"
+        required: true
+      examples:
+        description: "Examples to generate"
+        default: "13000"
+        required: true
+      dry_run:
+        description: "Generate and validate only, do not upload"
+        type: boolean
+        default: false
+  push:
+    tags: ["v*"]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv python install 3.12
+      - run: uv sync --group dev --extra publish
+
+      # The dataset is never committed; it is regenerated from the seeded
+      # generator so what gets published is exactly what the code produces.
+      - name: Generate
+        run: |
+          N="${{ github.event.inputs.examples || '13000' }}"
+          uv run python generator/build.py -n "$N" --out data
+          uv run python generator/build.py -n "$N" --thinking --out data/thinking
+
+      # Nothing is uploaded unless every gate passes: schema, enums, acceptance
+      # criteria counts, reproduction steps, leakage, Turkish orthography and
+      # the hallucination rate.
+      - name: Validate
+        run: |
+          uv run python scripts/validate.py --dir data
+          uv run python scripts/validate.py --dir data/thinking
+
+      - name: Tests
+        run: uv run pytest
+
+      - name: Upload
+        if: ${{ github.event.inputs.dry_run != 'true' }}
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          if [ -z "$HF_TOKEN" ]; then
+            echo "HF_TOKEN secret is not set — add it in Settings > Secrets > Actions"
+            exit 1
+          fi
+          uv run python scripts/upload_hf.py \
+            --repo "${{ github.event.inputs.repo || 'fport/issue-writer-tr-en' }}"
+
+      - name: Summary
+        run: |
+          {
+            echo "### Dataset published"
+            echo ""
+            for s in train validation test; do
+              echo "- \`$s\`: $(wc -l < data/$s.jsonl) examples"
+            done
+            echo ""
+            echo "https://huggingface.co/datasets/${{ github.event.inputs.repo || 'fport/issue-writer-tr-en' }}"
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -199,6 +199,30 @@ d = domain("insurance", "insurance platform", "sigorta platformu", "INS",
 register(d, features=[F("claim-upload", "upload", "Claims", ["claims"], ...)], ...)
 ```
 
+## Yayınlama
+
+Veri seti bu depoda tutulmuyor; tohumlu üreticiden yeniden üretiliyor. Yayınlama
+her push'a eşlik eden bir şey değil, bilinçli bir eylem — dışa açık olduğu için
+hatalı bir commit hatalı bir genel veri setine dönüşürdü.
+
+İki yol var, ikisi de önce tüm kapıyı çalıştırıyor (üret → doğrula → testler):
+
+```bash
+# yerelde
+uv run python generator/build.py -n 13000 --out data
+uv run python generator/build.py -n 13000 --thinking --out data/thinking
+uv run python scripts/validate.py --dir data
+uv run python scripts/upload_hf.py --repo <kullanici>/issue-writer-tr-en
+```
+
+Ya da Actions sekmesinden: **Publish dataset** → *Run workflow*. Repo adını ve
+örnek sayısını girdi olarak alıyor; yüklemeden üretip doğrulayan bir kuru çalıştırma
+anahtarı da var. Sürüm etiketi (`v*`) atmak aynı işi tetikliyor.
+
+Workflow yazma yetkili bir `HF_TOKEN` secret'ı istiyor
+(*Settings → Secrets and variables → Actions*). Yoksa yükleme adımı yarım
+yayınlamak yerine net bir mesajla başarısız oluyor.
+
 ## Eğitim
 
 Önerilen yol [`notebooks/gemma4_unsloth_finetune.ipynb`](notebooks/gemma4_unsloth_finetune.ipynb):
