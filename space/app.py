@@ -46,11 +46,20 @@ TR_WORDS = (" bir ", " için ", " ve ", " bu ", " ile ", " var ", " yok ", " ama
 
 source = MODEL_ID or BASE_ID
 tokenizer = AutoTokenizer.from_pretrained(source)
+# device_map="auto" is wrong on ZeroGPU: no GPU is reserved at import time, so
+# accelerate offloads half the weights to disk. Load on CPU, then move.
 model = AutoModelForCausalLM.from_pretrained(
-    source, dtype=torch.bfloat16, device_map="auto", attn_implementation="sdpa"
+    source, dtype=torch.bfloat16, attn_implementation="sdpa"
 )
 if ADAPTER_ID and not MODEL_ID:
-    model.load_adapter(ADAPTER_ID)
+    # peft's own API rather than transformers' model.load_adapter(): that bridge
+    # imports private peft symbols and breaks whenever the two versions drift.
+    # Merging afterwards drops the LoRA wrapper, so generation runs at base speed.
+    from peft import PeftModel
+
+    model = PeftModel.from_pretrained(model, ADAPTER_ID).merge_and_unload()
+if torch.cuda.is_available():
+    model = model.to("cuda")
 model.eval()
 
 LOADED = MODEL_ID or (f"{BASE_ID} + {ADAPTER_ID}" if ADAPTER_ID else BASE_ID)
