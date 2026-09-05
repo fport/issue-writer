@@ -1,0 +1,8 @@
+# gradio and spaces are pinned by the platform — do not list them here,
+# it breaks dependency resolution on ZeroGPU.
+--extra-index-url https://download.pytorch.org/whl/cu128
+torch==2.11.0
+transformers==5.12.1
+peft==0.18.0
+accelerate==1.14.0
+huggingface-hub==1.21.0
