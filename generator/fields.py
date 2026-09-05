@@ -88,13 +88,20 @@ EVIDENCE = {
        "Kibana sorgusu `{slug}` olarak kaydedildi; `{trace}` izleme kimliği hatalı isteği uçtan uca kapsıyor.",
        "Ekran kaydı ekli (0:12'de hata görünüyor), ayrıca API yanıt gövdesi eklendi."]}
 
+# Surum numarasi TASIMAZ: regresyon cumlesindeki surumler girdide gecmedigi
+# icin modele uydurmayi ogretiyordu. Tarih ve surum gerekiyorsa raporu yazanin
+# vermesi gerekir; burada yalnizca gozlemlenebilir ifadeler kullaniyoruz.
 REGRESSION = {
-"en": ["Worked in {rel_old}; first reported after the {rel_new} release on {date}.",
+"en": ["Reported as a regression: it worked before the last release, according to the reporter.",
        "Not a regression — this path has never worked since the feature shipped.",
-       "Suspected regression from the {component} refactor merged two sprints ago."],
-"tr": ["{rel_old} sürümünde çalışıyordu; ilk olarak {date} tarihindeki {rel_new} sürümünden sonra bildirildi.",
+       "Suspected regression from the {component} refactor merged two sprints ago.",
+       "Unclear whether this ever worked; needs confirmation from the reporter.",
+       "First reported this week; no earlier occurrence in the support history."],
+"tr": ["Regresyon olarak bildirildi: bildiren kişiye göre son sürümden önce çalışıyordu.",
        "Regresyon değil — bu akış özellik yayına alındığından beri hiç çalışmadı.",
-       "İki sprint önce merge edilen {component} refactor'ünden gelen regresyon şüphesi var."]}
+       "İki sprint önce merge edilen {component} refactor'ünden gelen regresyon şüphesi var.",
+       "Daha önce çalışıp çalışmadığı belirsiz; bildiren kişiden teyit gerekiyor.",
+       "İlk kez bu hafta bildirildi; destek geçmişinde daha eski bir kayıt yok."]}
 
 PRIORITY_RULE = {
  ("Critical", True):  "Highest", ("Critical", False): "Highest",

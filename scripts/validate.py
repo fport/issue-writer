@@ -97,6 +97,37 @@ def check_row(row, idx, errors, warns):
             if not all(k in a for k in ("id", "given", "when", "then")):
                 errors.append(f"[{idx}] AC alanlari eksik: {a}")
 
+    # Uydurma denetimi: ciktidaki surum numaralari girdide de gecmeli.
+    # Bu kontrol olmadan Environment/Regression bolumleri sessizce modele
+    # girdide bulunmayan surum uretmeyi ogretiyordu.
+    if task in ("draft_issue", "bug_from_log"):
+        def _versions(text):
+            """Surum numarasi adaylari.
+
+            Iki tur yanlis pozitif elenir: binlik ayrac (12.000) ve standart
+            adlarindaki surumler (SAML 2.0, PCI DSS 4.0) — ikincisi ozellik
+            tanimlarinin parcasidir, uydurma degil.
+            """
+            standards = ("saml", "scim", "oauth", "tls", "ssl", "http", "pci",
+                         "dss", "soc", "wcag", "utf", "ipv", "api", "openapi",
+                         "webvtt", "hdr", "usb", "bluetooth")
+            out = set()
+            for mt in re.finditer(r"\b\d+\.\d+(?:\.\d+)?\b", text):
+                parts = mt.group(0).split(".")
+                if len(parts) == 2 and len(parts[1]) == 3:      # 12.000
+                    continue
+                before = text[max(0, mt.start() - 14):mt.start()].lower()
+                if any(std in before for std in standards):
+                    continue
+                out.add(mt.group(0))
+            return out
+        invented = _versions(msgs[2]["content"]) - _versions(msgs[1]["content"])
+        if invented:
+            # Tek tuk vaka uyari; sistematik sizinti asagida oran uzerinden
+            # hataya cevrilir. Onemli olan modelin uydurmayi OGRENIP ogrenmedigi,
+            # tek bir ornegin kusursuzlugu degil.
+            warns.append(f"[{idx}] HALLUCINATION girdide olmayan surum: {sorted(invented)}")
+
     if m.get("lang") == "tr":
         blob = msgs[1]["content"] + " " + msgs[2]["content"]
         hits = set(x.lower() for x in TR_SUSPECT.findall(blob))
@@ -126,6 +157,18 @@ def main():
         all_rows += rows
         for i, r in enumerate(rows):
             check_row(r, f"{split}:{i}", errors, warns)
+
+    # uydurma orani: tek tuk vaka tolere edilir, sistematik sizinti edilmez
+    halluc = sum(1 for w in warns if "HALLUCINATION" in w)
+    drafts = sum(1 for r in all_rows
+                 if r["meta"]["task"] in ("draft_issue", "bug_from_log"))
+    if drafts:
+        rate = halluc / drafts
+        if rate > 0.01:
+            errors.append(
+                f"UYDURMA ORANI %{rate*100:.1f} ({halluc}/{drafts}) — esik %1. "
+                f"Cikti bolumleri girdide bulunmayan bilgi tasiyor; ureticide "
+                f"Environment/Regression yollarini kontrol edin.")
 
     # sizinti: ayni cekirdek hem train hem test'te olmamali
     tr_slugs = {r["meta"]["slug"] for r in by_split.get("train", [])}

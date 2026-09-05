@@ -9,6 +9,13 @@ onemli bir kismi modelin eksigi fark edip varsayim/soru uretmesidir.
 CHANNELS = ["slack", "email", "meeting_note", "support_ticket", "oneliner",
             "prd_excerpt", "qa_note", "sentry", "voice_note", "whatsapp"]
 
+# Hata girdisinde ortam bilgisini GERCEKTEN tasiyan kanallar. Digerlerinde
+# ciktiya ortam yazmak uydurmadir: model girdide olmayan surum ve cihaz
+# uretmeyi ogrenir. Bunlar disindaki kanallarda "belirtilmemis" yazilir.
+BUG_CHANNELS_WITH_ENV = {"qa_note", "email"}
+# Sentry kaydi surum tasir ama cihaz/ortam tasimaz.
+BUG_CHANNELS_WITH_RELEASE = {"sentry"}
+
 # ---------------------------------------------------------------- OZELLIK GIRDILERI
 FEATURE_TMPL = {
 "slack": {

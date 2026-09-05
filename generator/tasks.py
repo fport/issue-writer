@@ -216,6 +216,12 @@ def build_story(f, domain, lang, rng, missing=()):
 
 
 def build_bug(b, domain, lang, rng, env, missing=()):
+    # Ortam bilgisi girdide yoksa ciktida da olmamali. Bunu burada yapiyoruz ki
+    # her cagiran ayni davranssin; daha once yalnizca draft_issue yoluna
+    # konuldugu icin bug_from_log ve improve_ticket surum uyduruyordu.
+    if "environment" in missing:
+        env = ({"en": "Not stated in the report — see clarifying questions.",
+                "tr": "Raporda belirtilmemiş — açıklayıcı sorulara bakın."})[lang]
     v = _ctx_vars(b, domain, lang, rng)
     v["surface"] = b.component
     prod_no_wa = rng.random() < .55
@@ -226,8 +232,13 @@ def build_bug(b, domain, lang, rng, env, missing=()):
     unknown = ({"en": "Not provided in the report.", "tr": "Raporda verilmemiş."})[lang]
     evidence = (unknown if "environment" in missing
                 else _fmt(rng.choice(FL.EVIDENCE[lang]), **v))
-    regression = (None if "environment" in missing
-                  else _fmt(rng.choice(FL.REGRESSION[lang]), **v))
+    # Surum numarasi iceren regresyon cumlesi yalnizca ortam biliniyorsa
+    # kullanilabilir; yoksa modele uydurma ogretmis oluruz.
+    if "environment" in missing:
+        regression = ({"en": "Not known whether this ever worked; the report does not say.",
+                       "tr": "Daha önce çalışıp çalışmadığı bilinmiyor; raporda belirtilmemiş."})[lang]
+    else:
+        regression = _fmt(rng.choice(FL.REGRESSION[lang]), **v)
     expected = (unknown if "expected result" in missing
                 else (b.expected_en if lang == "en" else b.expected_tr))
     if "reproduction steps" in missing:
@@ -367,15 +378,20 @@ def t_draft_issue(item, domain, lang, rng, kind, completeness="complete"):
         raw, miss = degrade(raw, completeness, lang, rng, item, "feature")
         issue = build_story(item, domain, lang, rng, missing=miss)
     elif kind == "bug":
+        from inputs import BUG_CHANNELS_WITH_ENV
         env = rng.choice(R.ENVS)
-        raw = make_bug_input(item, domain, lang, rng.choice(
-            ["support_ticket", "qa_note", "slack", "email", "oneliner"]), rng, env)
+        channel = rng.choice(["support_ticket", "qa_note", "slack", "email", "oneliner"])
+        raw = make_bug_input(item, domain, lang, channel, rng, env)
         raw, miss = degrade(raw, completeness, lang, rng, item, "bug")
-        if "environment" in miss:
-            env = ({"en": "Not stated in the report — see clarifying questions.",
-                    "tr": "Raporda belirtilmemiş — açıklayıcı sorulara bakın."})[lang]
+        # Kanal ortam bilgisi tasimiyorsa cikti da tasimamali; aksi halde model
+        # girdide hic gecmeyen surum ve cihaz uretmeyi ogrenir.
+        if channel not in BUG_CHANNELS_WITH_ENV and "environment" not in miss:
+            miss = [*miss, "environment"]
         issue = build_bug(item, domain, lang, rng, env, missing=miss)
     else:
+        # Epic girdisi bir strateji notudur ve eksiltilmiyor; meta'ya "vague"
+        # yazmak veriyi yalanci yapardi.
+        completeness = "complete"
         goal = item.goal_en if lang == "en" else item.goal_tr
         problem = item.problem_en if lang == "en" else item.problem_tr
         raw = (f"Strategy note ({item.component}): we want to {goal}. Current situation: {problem}"
@@ -645,10 +661,14 @@ def t_add_ac(feature, domain, lang, rng):
 
 
 def t_bug_from_log(bug, domain, lang, rng):
+    # Sentry kaydi surum tasir ama cihaz/ortam tasimaz: ortam "belirtilmemis"
+    # kalir, surum ise girdide gectigi icin ciktida kullanilabilir.
     env = rng.choice(R.ENVS)
     raw = make_bug_input(bug, domain, lang, "sentry", rng, env)
-    issue = build_bug(bug, domain, lang, rng, env,
-                      missing=() if rng.random() < .5 else ("expected result",))
+    miss = ["environment"]
+    if rng.random() < .5:
+        miss.append("expected result")
+    issue = build_bug(bug, domain, lang, rng, env, missing=miss)
     user = f"{_instr('bug_from_log', lang, rng)}\n\n---\n{raw}\n---"
     return envelope(_sys(lang, rng), user, dumps(issue),
                     {"task": "bug_from_log", "kind": "bug", "lang": lang,

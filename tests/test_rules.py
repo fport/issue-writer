@@ -79,3 +79,56 @@ def test_labels_are_kebab_case(small_dataset):
         for lbl in i["labels"]:
             assert re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)*", lbl), lbl
         assert len(i["labels"]) <= 6
+
+
+def test_no_invented_version_numbers(small_dataset):
+    """Ciktidaki surum numaralari girdide de gecmeli.
+
+    Bu kural bir egitim kosusunda kirildi: bug govdesindeki Environment ve
+    Regression bolumleri her zaman surum tasiyordu, ama Slack/destek talebi
+    gibi kanallar o bilgiyi hic vermiyordu. Egitim setinin %26'si modele tam
+    olarak uydurmayi ogretti ve olcumde no_hallucination %100'den %76'ya dustu.
+    """
+    STD = ("saml", "scim", "oauth", "tls", "ssl", "http", "pci", "dss", "soc",
+           "wcag", "utf", "ipv", "api")
+
+    def versions(text):
+        out = set()
+        for m in re.finditer(r"\b\d+\.\d+(?:\.\d+)?\b", text):
+            parts = m.group(0).split(".")
+            if len(parts) == 2 and len(parts[1]) == 3:       # 12.000
+                continue
+            if any(s in text[max(0, m.start() - 14):m.start()].lower() for s in STD):
+                continue                                      # SAML 2.0
+            out.add(m.group(0))
+        return out
+
+    drafts = [r for r in small_dataset
+              if r["meta"]["task"] in ("draft_issue", "bug_from_log")]
+    assert drafts
+    leaked = [r for r in drafts
+              if versions(r["messages"][2]["content"])
+              - versions(r["messages"][1]["content"])]
+    rate = len(leaked) / len(drafts)
+    assert rate <= 0.01, (
+        f"%{rate*100:.1f} ornekte girdide bulunmayan surum numarasi var "
+        f"({len(leaked)}/{len(drafts)}); esik %1")
+
+
+def test_bug_environment_matches_input(small_dataset):
+    """Girdi ortam bilgisi tasimiyorsa govde de tasimamali."""
+    for r in small_dataset:
+        if r["meta"]["kind"] != "bug" or r["meta"]["task"] != "draft_issue":
+            continue
+        i = json.loads(r["messages"][2]["content"])
+        d = i["description"]
+        m = re.search(r"^h2\. (?:Environment|Ortam)\n(.+)$", d, re.M)
+        if not m:
+            continue
+        env = m.group(1).strip()
+        stated = ("Not stated" in env or "belirtilmemiş" in env)
+        if not stated:
+            # govdede gercek ortam varsa girdide de bir iz olmali
+            assert any(tok in r["messages"][1]["content"]
+                       for tok in env.replace("·", " ").split()[:3]), (
+                f"govde ortam tasiyor ama girdi tasimiyor: {env[:60]}")
