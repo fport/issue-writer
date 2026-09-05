@@ -98,7 +98,7 @@ def test_docs_match_the_data(small_dataset):
     if not (root / "data/train.jsonl").exists():
         pytest.skip("veri seti uretilmemis")
 
-    counts = {s: sum(1 for _ in open(root / f"data/{s}.jsonl", encoding="utf-8"))
+    counts = {s: len((root / f"data/{s}.jsonl").read_text(encoding="utf-8").splitlines())
               for s in ("train", "validation", "test")}
 
     for name in ("README.md", "DATASET_CARD.md"):
