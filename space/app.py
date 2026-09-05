@@ -96,7 +96,7 @@ def _generate(text: str, max_new_tokens: int, lang: str) -> Iterator[str]:
                 disable_compile=True,          # ZeroGPU forks per task; JIT never pays off
                 pad_token_id=tokenizer.pad_token_id or tokenizer.eos_token_id,
             )
-        except Exception as exc:               # noqa: BLE001
+        except Exception as exc:
             errors.append(exc)
         finally:
             # generate() only signals the streamer on the happy path; without this

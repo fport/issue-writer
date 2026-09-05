@@ -1,9 +1,10 @@
 # Issue Writer — veri seti üretimi ve fine-tune hattı
 
-[![Dataset on HF](https://img.shields.io/badge/%F0%9F%A4%97%20dataset-issue--writer--tr--en-yellow)](https://huggingface.co/datasets/fport/issue-writer-tr-en)
+[![Dataset on HF](https://img.shields.io/badge/%F0%9F%A4%97%20dataset-issue--writer--tr--en-yellow?style=flat-square&cacheSeconds=300)](https://huggingface.co/datasets/fport/issue-writer-tr-en)
 
 *(English version: [README.md](README.md))*
-[![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
+[![CI](https://img.shields.io/github/actions/workflow/status/fport/issue-writer/ci.yml?style=flat-square&label=CI&cacheSeconds=300)](https://github.com/fport/issue-writer/actions)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue?style=flat-square&cacheSeconds=300)](LICENSE)
 
 Ham ürün girdisini (Slack mesajı, destek talebi, Sentry alarmı, toplantı notu)
 **kurallara uygun issue kayıtlarına** çeviren bir model eğitmek için gereken her şey:

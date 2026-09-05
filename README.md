@@ -1,7 +1,8 @@
 # Issue Writer — synthetic dataset generator and fine-tuning pipeline
 
-[![Dataset on HF](https://img.shields.io/badge/%F0%9F%A4%97%20dataset-issue--writer--tr--en-yellow)](https://huggingface.co/datasets/fport/issue-writer-tr-en)
-[![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
+[![Dataset on HF](https://img.shields.io/badge/%F0%9F%A4%97%20dataset-issue--writer--tr--en-yellow?style=flat-square&cacheSeconds=300)](https://huggingface.co/datasets/fport/issue-writer-tr-en)
+[![CI](https://img.shields.io/github/actions/workflow/status/fport/issue-writer/ci.yml?style=flat-square&label=CI&cacheSeconds=300)](https://github.com/fport/issue-writer/actions)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue?style=flat-square&cacheSeconds=300)](LICENSE)
 
 Everything needed to train a model that turns raw product input — a Slack message,
 a support ticket, a Sentry alert, a meeting note — into **well-formed issue tracker
