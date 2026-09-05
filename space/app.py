@@ -46,20 +46,24 @@ TR_WORDS = (" bir ", " için ", " ve ", " bu ", " ile ", " var ", " yok ", " ama
 
 source = MODEL_ID or BASE_ID
 tokenizer = AutoTokenizer.from_pretrained(source)
-# device_map="auto" is wrong on ZeroGPU: no GPU is reserved at import time, so
-# accelerate offloads half the weights to disk. Load on CPU, then move.
+# device_map="cuda" streams the shards straight onto the device. Two things go
+# wrong without it on ZeroGPU: "auto" sees no reserved GPU at import time and
+# offloads to disk, and loading onto CPU first needs ~16 GB of RAM the Space does
+# not have, so the process is killed with no traceback.
 model = AutoModelForCausalLM.from_pretrained(
-    source, dtype=torch.bfloat16, attn_implementation="sdpa"
+    source,
+    dtype=torch.bfloat16,
+    device_map="cuda" if torch.cuda.is_available() else None,
+    attn_implementation="sdpa",
 )
 if ADAPTER_ID and not MODEL_ID:
     # peft's own API rather than transformers' model.load_adapter(): that bridge
     # imports private peft symbols and breaks whenever the two versions drift.
-    # Merging afterwards drops the LoRA wrapper, so generation runs at base speed.
+    # The wrapper is left in place — merge_and_unload() would run real matmuls at
+    # import time, and no GPU is attached until a @spaces.GPU call.
     from peft import PeftModel
 
-    model = PeftModel.from_pretrained(model, ADAPTER_ID).merge_and_unload()
-if torch.cuda.is_available():
-    model = model.to("cuda")
+    model = PeftModel.from_pretrained(model, ADAPTER_ID)
 model.eval()
 
 LOADED = MODEL_ID or (f"{BASE_ID} + {ADAPTER_ID}" if ADAPTER_ID else BASE_ID)
