@@ -28,3 +28,4 @@ data/golden/preds*.jsonl
 .pytest_cache/
 .ruff_cache/
 .uv/
+unsloth_compiled_cache/
